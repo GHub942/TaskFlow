@@ -1,13 +1,13 @@
-# Contributing to TaskMaster Pro
+# Contributing to TaskFlow
 
-Thank you for your interest in improving TaskMaster Pro! We welcome contributions from developers, designers, and documentation writers.
+Thank you for your interest in improving TaskFlow! We welcome contributions from developers, designers, and documentation writers.
 
 ---
 
 ## How to Contribute
 
 ### 1. Reporting Bugs
-- Search existing [Issues](https://github.com/your-username/taskmaster-pro/issues) to ensure the bug hasn't been reported already.
+- Search existing [Issues](https://github.com/GHub942/TaskFlow/issues) to ensure the bug hasn't been reported already.
 - If not, open a new issue describing:
   - The expected behavior vs. actual behavior.
   - Steps to reproduce the bug.
