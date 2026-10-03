@@ -1,27 +1,25 @@
 # Security Policy
 
-## Supported Versions
+This project is a static, client-side HTML page with no server, no backend, no database, and no user data collection. Its attack surface is intentionally small, but a few things are still worth reporting responsibly.
 
-We provide security updates and patches for the following versions:
+## Scope
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.x     | :white_check_mark: |
-| < 1.0   | :x:                |
+Please report:
 
----
+- Any way the page could be made to execute untrusted script or inject content beyond its own inline code (e.g. via a crafted URL or hash value).
+- Any external resource the page loads that isn't the two declared font hosts (`fonts.googleapis.com`, `fonts.gstatic.com`).
+- Any factual error presented as a security claim (for example, a service described as end-to-end encrypted when it is not) — these affect real decisions people make about their privacy and safety.
 
-## Reporting a Vulnerability
+**Not in scope:**
+- Cosmetic UI bugs
+- Feature requests or enhancement ideas
+- Performance complaints (unless security-relevant)
+- Issues requiring backend infrastructure to exploit (we have none)
 
-We take the security of TaskMaster Pro seriously. Since TaskMaster Pro runs client-side inside the user's web browser and relies solely on `localStorage` without external server backends, security risks are minimal. However, if you discover a security vulnerability or Cross-Site Scripting (XSS) exploit within the client side logic, please follow these steps:
+## Reporting a vulnerability
 
-1. **Do not create a public GitHub issue** for security vulnerabilities.
-2. Send a private security report detailing the issue and steps to reproduce it to `security@taskmaster-pro.local` (or open a private security advisory on GitHub).
-3. We will review your report within **48 hours** and provide an estimated timeline for remediation.
+Open an issue in this repository. If the report involves a factual/privacy-claim error rather than a code vulnerability, a regular issue is fine and doesn't need private disclosure. For a genuine code-level vulnerability, please avoid posting exploit details in a public issue — flag that you have a security report and a maintainer will follow up to receive details privately.
 
----
+## What to expect
 
-## Security Best Practices for Users
-
-- **Data Privacy:** All task data remains stored locally on your device (`localStorage`). Never paste sensitive credentials or passwords directly into task details.
-- **JSON Import Security:** Only import JSON backup files that you have generated yourself or obtained from trusted sources.
+This is a small, volunteer-maintained static site — there's no formal SLA, but reports will be acknowledged and factual/security issues are prioritized over cosmetic ones.
