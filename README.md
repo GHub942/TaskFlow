@@ -1,74 +1,37 @@
-# TaskFlow
+# TaskMaster Pro
 
-TaskFlow Pro is a modern, lightweight, single-page Kanban board and productivity web application. Built with HTML5, Tailwind CSS, and vanilla JavaScript, it helps users organize tasks efficiently with visual task management, Pomodoro timer integration, productivity analytics, custom categories, subtask checklists, and seamless JSON data import/export.
+A self-contained HTML page for task management — featuring **Kanban workflow**, **Pomodoro timer**, and **dark/light themes**. No server, no dependencies, no tracking.
 
----
+Available in French and English (default), with an in-page language switch — no build step, no dependencies.
 
-## 🚀 Features
+## What's inside
 
-- **Interactive Kanban Board:** Drag-and-drop tasks seamlessly between **To Do**, **In Progress**, and **Done** columns.
-- **Integrated Pomodoro Timer:** Link tasks directly to a Pomodoro timer to manage work sessions and keep track of focus time.
-- **Productivity Analytics:** Visual dashboard displaying completion rates, total estimated time, and overall task progress.
-- **Customizable Organization:** Categorize tasks, assign priorities (Low, Medium, High), set custom color labels, due dates, and recurrence rules.
-- **Checklist Subtasks:** Break down complex tasks into subtasks with built-in progress bars.
-- **Quick Search & Filtering:** Filter tasks by category or priority, sort by due date or priority, and use the global search (`⌘K` / `Ctrl+K`).
-- **Data Privacy & Portability:** All data is saved locally in your browser (`localStorage`). Backup or restore your data anytime using JSON Export/Import.
-- **Theme Support:** Native dark and light mode support with smooth transitions.
+- **Kanban Board** — three-column workflow (To Do → In Progress → Done) with drag-and-drop task movement
+- **Task Management** — create, edit, delete tasks with metadata (priority, category, deadline, duration, subtasks)
+- **Pomodoro Timer** — integrated productivity timer linked to individual tasks
+- **Statistics Dashboard** — completion rates, estimated time tracking, progress bars
+- **Global Search** — quick find with `⌘K` shortcut
+- **Data Export/Import** — backup and restore via JSON files
+- **Customization** — color picker, dark mode toggle, category filters, sorting options
 
----
+## Features
 
-## 🛠️ Getting Started
+| Feature | Description |
+|---------|-------------|
+| Drag & Drop | Move tasks between columns visually |
+| Local Storage | All data stays in browser |
+| Keyboard Shortcuts | `⌘K` for search, `Esc` to close modals |
+| Glassmorphism UI | Modern translucent panel design |
+| Responsive Layout | Works on desktop and mobile |
 
-### Prerequisites
+## Usage
 
-No build tools or backend servers required! TaskFlow runs directly in any modern web browser.
+This is a static, single-file site: open `v1.1.html` directly in a browser, or host it on any static file host (GitHub Pages, Netlify, plain web server). There is no server-side component and no build process.
 
-### Installation & Usage
+## Data & accuracy
 
-1. **Clone or Download the Repository:**
-   ```bash
-   git clone https://github.com/GHub942/TaskFlow/
-   cd TaskFlow```
+Task data persists in browser `localStorage`. Founding categories, feature lists, and technical specs were accurate as of the last update noted in the page footer. LocalStorage quotas vary by browser (typically 5MB per domain) — export regularly for backups. See [SECURITY.md](SECURITY.md) for limitations and [CONTRIBUTING.md](CONTRIBUTING.md) if you'd like to help keep this up to date.
 
-2. **Open the Application:**
-   Open `index.html` directly in your web browser of choice:
-   ```bash
-   # On macOS
-   open index.html
+## License
 
-   # On Linux
-   xdg-open index.html
-
-   # On Windows
-   start index.html
-   ```
-
----
-
-## ⌨️ Keyboard Shortcuts
-
-| Shortcut | Action |
-| --- | --- |
-| `⌘ K` / `Ctrl + K` | Open Quick Search dialog |
-| `ESC` | Close active modal or search window |
-
----
-
-## 📂 File Structure
-
-```text
-TaskFlow/
-├── index.html          # Main HTML application file (Includes JS & CSS styling)
-├── README.md          # Project documentation
-├── LICENSE.md         # MIT License details
-├── SECURITY.md        # Security reporting guidelines
-├── POLICY.md          # Project policies and acceptable usage
-├── CONTRIBUTING.md    # Guide for contributors
-└── TODO.md            # Planned features and improvements
-```
-
----
-
-## 📄 License
-
-This project is open-source and available under the terms of the [MIT License](LICENSE.md).
+Released under the [MIT License](LICENSE.md).
