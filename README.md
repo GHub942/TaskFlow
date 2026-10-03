@@ -28,8 +28,7 @@ No build tools or backend servers required! TaskFlow runs directly in any modern
 1. **Clone or Download the Repository:**
    ```bash
    git clone https://github.com/GHub942/TaskFlow/
-   cd taskmaster-pro
-   ```
+   cd TaskFlow```
 
 2. **Open the Application:**
    Open `index.html` directly in your web browser of choice:
