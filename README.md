@@ -1,4 +1,4 @@
-# TaskMaster Pro
+# TaskFlow
 
 A self-contained HTML page for task management — featuring **Kanban workflow**, **Pomodoro timer**, and **dark/light themes**. No server, no dependencies, no tracking.
 
