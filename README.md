@@ -1,6 +1,6 @@
-# TaskMaster Pro
+# TaskFlow
 
-TaskMaster Pro is a modern, lightweight, single-page Kanban board and productivity web application. Built with HTML5, Tailwind CSS, and vanilla JavaScript, it helps users organize tasks efficiently with visual task management, Pomodoro timer integration, productivity analytics, custom categories, subtask checklists, and seamless JSON data import/export.
+TaskFlow Pro is a modern, lightweight, single-page Kanban board and productivity web application. Built with HTML5, Tailwind CSS, and vanilla JavaScript, it helps users organize tasks efficiently with visual task management, Pomodoro timer integration, productivity analytics, custom categories, subtask checklists, and seamless JSON data import/export.
 
 ---
 
@@ -21,7 +21,7 @@ TaskMaster Pro is a modern, lightweight, single-page Kanban board and productivi
 
 ### Prerequisites
 
-No build tools or backend servers required! TaskMaster Pro runs directly in any modern web browser.
+No build tools or backend servers required! TaskFlow runs directly in any modern web browser.
 
 ### Installation & Usage
 
