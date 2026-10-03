@@ -27,21 +27,21 @@ No build tools or backend servers required! TaskMaster Pro runs directly in any 
 
 1. **Clone or Download the Repository:**
    ```bash
-   git clone https://github.com/your-username/taskmaster-pro.git
+   git clone https://github.com/GHub942/TaskFlow/
    cd taskmaster-pro
    ```
 
 2. **Open the Application:**
-   Open `v1.1.html` (or `index.html`) directly in your web browser of choice:
+   Open `index.html` directly in your web browser of choice:
    ```bash
    # On macOS
-   open v1.1.html
+   open index.html
 
    # On Linux
-   xdg-open v1.1.html
+   xdg-open index.html
 
    # On Windows
-   start v1.1.html
+   start index.html
    ```
 
 ---
@@ -58,8 +58,8 @@ No build tools or backend servers required! TaskMaster Pro runs directly in any 
 ## 📂 File Structure
 
 ```text
-taskmaster-pro/
-├── v1.1.html          # Main HTML application file (Includes JS & CSS styling)
+TaskFlow/
+├── index.html          # Main HTML application file (Includes JS & CSS styling)
 ├── README.md          # Project documentation
 ├── LICENSE.md         # MIT License details
 ├── SECURITY.md        # Security reporting guidelines
