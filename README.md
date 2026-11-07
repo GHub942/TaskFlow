@@ -1,36 +1,40 @@
 # TaskFlow
 
-A self-contained HTML page for task management — featuring **Kanban workflow**, **Pomodoro timer**, and **dark/light themes**. No server, no dependencies, no tracking.
+TaskFlow is a browser-based Kanban task manager delivered as a single HTML file. It keeps task data in the browser and does not require an account or application server.
 
-Available in French and English (default), with an in-page language switch — no build step, no dependencies.
-
-## What's inside
-
-- **Kanban Board** — three-column workflow (To Do → In Progress → Done) with drag-and-drop task movement
-- **Task Management** — create, edit, delete tasks with metadata (priority, category, deadline, duration, subtasks)
-- **Pomodoro Timer** — integrated productivity timer linked to individual tasks
-- **Statistics Dashboard** — completion rates, estimated time tracking, progress bars
-- **Global Search** — quick find with `⌘K` shortcut
-- **Data Export/Import** — backup and restore via JSON files
-- **Customization** — color picker, dark mode toggle, category filters, sorting options
+The interface supports English (US) and French (France), with system-language detection. Appearance can follow the system or use Light, Dark, or TaskMaster themes.
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| Drag & Drop | Move tasks between columns visually |
-| Local Storage | All data stays in browser |
-| Keyboard Shortcuts | `⌘K` for search, `Esc` to close modals |
-| Glassmorphism UI | Modern translucent panel design |
-| Responsive Layout | Works on desktop and mobile |
+- Three-column Kanban board with drag-and-drop and accessible task-move controls
+- Task priorities, categories, due dates, recurrence, estimates, and subtasks
+- Pomodoro timer with task-linked session history and productivity statistics
+- Search across task titles, descriptions, categories, and statuses
+- Overdue and upcoming due-date filters
+- Versioned JSON backup and restore, including task data and preferences
+- Keyboard navigation, responsive layout, and optional completion notifications
 
-## Usage
+## Settings and shortcuts
 
-This is a static, single-file site: open `v1.1.html` directly in a browser, or host it on any static file host (GitHub Pages, Netlify, plain web server). There is no server-side component and no build process.
+- Language: `System (Detected_language)`, `English (US)`, or `Français (FR)`
+- Theme: `System (Detected_theme)`, `Light`, `Dark`, or `TaskMaster`
+- `Ctrl+K` / `Cmd+K`: open search; use the arrow keys and Enter to open a result
+- `Ctrl+N` / `Cmd+N`: create a task; `Esc` closes the active dialog
+- Browser notifications require permission; sound alerts are separately optional
 
-## Data & accuracy
+JSON backups can replace current data or merge into it. During a merge, existing local tasks take precedence when IDs conflict. Older task-array backups remain supported.
 
-Task data persists in browser `localStorage`. Founding categories, feature lists, and technical specs were accurate as of the last update noted in the page footer. LocalStorage quotas vary by browser (typically 5MB per domain) — export regularly for backups. See [SECURITY.md](SECURITY.md) for limitations and [CONTRIBUTING.md](CONTRIBUTING.md) if you'd like to help keep this up to date.
+## Run
+
+Open `index.html` in a modern browser. No build step or package manager is required. The page loads Tailwind CSS, Font Awesome, and the Inter font from third-party CDNs, so those resources require an internet connection; the core task data remains local to the browser.
+
+## Data and privacy
+
+Tasks, settings, and timer sessions are stored in browser `localStorage`. They are not synchronized between browsers or devices. Export backups regularly; browser storage can be cleared or limited. Review [SECURITY.md](SECURITY.md) for the external-resource and data-handling details.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for project conventions and browser verification guidance.
 
 ## License
 

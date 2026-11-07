@@ -7,7 +7,7 @@ Thanks for considering a contribution. This project is a single static HTML page
 - **Fix outdated information** — a feature description, bug, or security detail needs updating.
 - **Add a new feature** — propose functionality that fits the existing pattern (filters, task metadata, export options).
 - **Improve a translation** — the French and English versions should stay equivalent in meaning; point out anything that drifted.
-- **Accessibility and design** — color contrast, keyboard navigation, screen-reader labels, responsive layout.
+- **Accessibility and design** — color contrast, keyboard and touch navigation, screen-reader labels, responsive layout.
 - **Bugs** — anything that doesn't behave as expected (drag-and-drop, Pomodoro timer, localStorage persistence, filters).
 
 ## Before you open a pull request
@@ -15,14 +15,14 @@ Thanks for considering a contribution. This project is a single static HTML page
 1. **Check your facts.** For data changes (feature specs, browser support dates, security claims), link to a source in your PR description — ideally official docs, release notes, or reputable testing.
 2. **Keep entries balanced.** Don't turn documentation into marketing copy, for or against any feature or approach.
 3. **Update both languages.** If you change English copy that has a French equivalent (or vice versa), update both, or flag in your PR that a translation update is still needed.
-4. **Test in a browser.** Since this is a single HTML file with no build step, just open it directly and click through all features (Kanban board, Pomodoro, stats modal, search, theme toggle) in both languages before submitting.
+4. **Test in a browser.** Open `index.html` directly and check settings, both languages, all themes, Kanban movement, Pomodoro completion, statistics, search, and import/export on desktop and mobile layouts.
 
 ## Adding a new feature
 
 Each addition should fit the existing code pattern. Changes go in one of these areas:
 
 - **Task data structure** — add fields to the `tasks` array schema (near top of script)
-- **UI labels/text** — update strings in the HTML (keep parallel French/English copies)
+- **UI labels/text** — update the localization dictionaries in the HTML and verify both languages
 - **Filter/options arrays** — expand `categories`, priorities, recurrence options
 - **Function logic** — modify JavaScript functions while preserving existing behavior
 
@@ -51,4 +51,4 @@ Be respectful and assume good faith. Disagreements about feature priority or imp
 This project has no npm, webpack, or compilation. Changes are made directly to `index.html`. To test:
 1. Save your changes
 2. Open `index.html` in multiple browsers
-3. Verify nothing broke in existing features
+3. Verify nothing broke in existing features and confirm there are no console errors

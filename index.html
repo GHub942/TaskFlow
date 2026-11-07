@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="en" class="dark" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskMaster Pro - Kanban & Productivity</title>
+    <title>TaskFlow - Kanban & Productivity</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -63,6 +63,18 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
+        .theme-taskmaster body {
+            background: #f3f5ef;
+            color: #233b3d;
+        }
+        .theme-taskmaster .glass-panel {
+            background: rgba(255, 255, 255, 0.82);
+            border-color: rgba(13, 110, 108, 0.2);
+        }
+        .theme-taskmaster ::-webkit-scrollbar-thumb {
+            background: rgba(13, 110, 108, 0.55);
+        }
+
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
@@ -117,7 +129,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                        TaskMaster Pro
+                        TaskFlow
                     </h1>
                     <p class="text-xs text-slate-500 dark:text-slate-400">Kanban & Productivité Custom</p>
                 </div>
@@ -139,7 +151,7 @@
                 </button>
 
                 <!-- Stats View Toggle -->
-                <button onclick="toggleStatsModal()" data-tooltip="Statistiques de Productivité" class="p-2 rounded-lg bg-slate-200/60 dark:bg-slate-800/80 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-600 text-slate-600 dark:text-slate-300 transition">
+                <button id="stats-trigger" onclick="toggleStatsModal()" data-tooltip="Statistiques de Productivité" class="p-2 rounded-lg bg-slate-200/60 dark:bg-slate-800/80 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-600 text-slate-600 dark:text-slate-300 transition">
                     <i class="fa-solid fa-chart-pie text-base"></i>
                 </button>
 
@@ -153,20 +165,20 @@
                         <button onclick="exportData()" class="w-full text-left px-4 py-2 text-xs hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2">
                             <i class="fa-solid fa-download"></i> Exporter JSON
                         </button>
-                        <label class="w-full text-left px-4 py-2 text-xs hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2 cursor-pointer">
+                        <label role="button" tabindex="0" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); document.getElementById('import-file').click(); }" class="w-full text-left px-4 py-2 text-xs hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2 cursor-pointer">
                             <i class="fa-solid fa-upload"></i> Importer JSON
                             <input type="file" id="import-file" accept=".json" onchange="importData(event)" class="hidden">
                         </label>
                     </div>
                 </div>
 
-                <!-- Theme Toggle -->
-                <button onclick="toggleTheme()" data-tooltip="Changer le thème" class="p-2 rounded-lg bg-slate-200/60 dark:bg-slate-800/80 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-400 text-slate-600 dark:text-slate-300 transition">
-                    <i id="theme-icon" class="fa-solid fa-moon text-base"></i>
+                <!-- Settings -->
+                <button id="settings-trigger" onclick="openSettingsModal()" data-tooltip="Settings" aria-label="Settings" class="p-2 rounded-lg bg-slate-200/60 dark:bg-slate-800/80 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-600 text-slate-600 dark:text-slate-300 transition">
+                    <i class="fa-solid fa-gear text-base"></i>
                 </button>
 
                 <!-- New Task Button -->
-                <button onclick="openTaskModal()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs shadow-md shadow-indigo-500/20 transition">
+                <button id="new-task-trigger" onclick="openTaskModal()" data-tooltip="New task" aria-label="New task" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs shadow-md shadow-indigo-500/20 transition">
                     <i class="fa-solid fa-plus"></i>
                     <span class="hidden sm:inline">Nouvelle tâche</span>
                 </button>
@@ -199,6 +211,13 @@
         <button onclick="resetFilters()" class="text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-500 underline flex items-center gap-1">
             <i class="fa-solid fa-rotate-left text-[10px]"></i> Réinitialiser filtres
         </button>
+    </div>
+
+    <!-- Main Content Container (Kanban Columns) -->
+    <div class="max-w-7xl mx-auto w-full px-4 lg:px-8 pb-3 flex items-center gap-2" role="group" aria-label="Due date filters">
+        <button type="button" data-due-filter="all" onclick="setDueFilter('all')" class="due-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white">All tasks</button>
+        <button type="button" data-due-filter="overdue" onclick="setDueFilter('overdue')" class="due-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-200 dark:bg-slate-800">Overdue</button>
+        <button type="button" data-due-filter="upcoming" onclick="setDueFilter('upcoming')" class="due-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-200 dark:bg-slate-800">Due soon</button>
     </div>
 
     <!-- Main Content Container (Kanban Columns) -->
@@ -302,7 +321,7 @@
     </div>
 
     <!-- Task Creation / Edition Modal -->
-    <div id="task-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+    <div id="task-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
         <div class="glass-panel w-full max-w-2xl rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 my-8">
             
             <!-- Modal Header -->
@@ -407,10 +426,10 @@
     </div>
 
     <!-- Statistics Modal -->
-    <div id="stats-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    <div id="stats-modal" role="dialog" aria-modal="true" aria-labelledby="stats-heading" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
         <div class="glass-panel w-full max-w-xl rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800">
             <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-slate-800">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">
+                <h3 id="stats-heading" class="text-lg font-bold text-slate-800 dark:text-slate-100">
                     <i class="fa-solid fa-chart-line text-indigo-500 mr-2"></i> Statistiques de Productivité
                 </h3>
                 <button onclick="toggleStatsModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
@@ -426,6 +445,10 @@
                 <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
                     <div id="stat-total-time" class="text-3xl font-extrabold text-purple-600 dark:text-purple-400">0h</div>
                     <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Temps estimé total</div>
+                </div>
+                <div class="col-span-2 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                    <div id="stat-actual-time" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">0m</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Temps réellement suivi</div>
                 </div>
             </div>
 
@@ -449,22 +472,71 @@
     </div>
 
     <!-- Global Quick Search Modal (Cmd+K) -->
-    <div id="search-modal" class="fixed inset-0 z-50 hidden flex items-start justify-center pt-20 p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    <div id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-heading" class="fixed inset-0 z-50 hidden flex items-start justify-center pt-20 p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
         <div class="glass-panel w-full max-w-xl rounded-2xl p-4 shadow-2xl border border-slate-200 dark:border-slate-800">
             <div class="flex items-center gap-3 px-3 py-2 border-b border-slate-200 dark:border-slate-800">
                 <i class="fa-solid fa-magnifying-glass text-indigo-500"></i>
-                <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Rechercher une tâche, tag..." 
+                <h3 id="search-heading" class="sr-only">Search tasks</h3>
+                <input type="text" id="search-input" role="combobox" aria-controls="search-results" aria-expanded="false" aria-autocomplete="list" oninput="handleSearch(this.value)" placeholder="Rechercher une tâche, tag..."
                        class="w-full bg-transparent border-none text-sm focus:outline-none text-slate-800 dark:text-slate-100">
                 <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-[10px] text-slate-500 dark:text-slate-400 font-mono">ESC</kbd>
             </div>
-            <div id="search-results" class="max-h-80 overflow-y-auto mt-3 space-y-2">
+            <div id="search-results" role="listbox" class="max-h-80 overflow-y-auto mt-3 space-y-2">
                 <!-- Search matching cards dynamically displayed -->
             </div>
         </div>
     </div>
 
+    <!-- Application Settings -->
+    <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-heading" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+        <section class="glass-panel w-full max-w-md rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-slate-800">
+                <h3 id="settings-heading" class="text-base font-bold">Settings</h3>
+                <button type="button" onclick="closeSettingsModal()" aria-label="Close settings" class="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-4">
+                <label class="block text-xs font-semibold" for="language-setting">Language
+                    <select id="language-setting" onchange="updateSetting('language', this.value)" class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-normal">
+                        <option value="system">System (Detected_language)</option>
+                        <option value="en">English (US)</option>
+                        <option value="fr">Français (FR)</option>
+                    </select>
+                </label>
+                <label class="block text-xs font-semibold" for="theme-setting">Theme
+                    <select id="theme-setting" onchange="updateSetting('theme', this.value)" class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-normal">
+                        <option value="system">System (Detected_theme)</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                        <option value="taskmaster">TaskMaster</option>
+                    </select>
+                </label>
+                <label class="flex items-center justify-between gap-3 text-sm">
+                    <span>Browser notifications</span>
+                    <input id="notifications-setting" type="checkbox" onchange="updateSetting('notifications', this.checked)" class="h-4 w-4 accent-indigo-600">
+                </label>
+                <label class="flex items-center justify-between gap-3 text-sm">
+                    <span>Sound alert</span>
+                    <input id="sound-setting" type="checkbox" onchange="updateSetting('sound', this.checked)" class="h-4 w-4 accent-indigo-600">
+                </label>
+            </div>
+        </section>
+    </div>
+
+    <!-- Import Mode Selection -->
+    <div id="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-heading" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+        <section class="glass-panel w-full max-w-sm rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800">
+            <h3 id="import-heading" class="text-base font-bold mb-2">Import backup</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Choose how to apply the selected backup.</p>
+            <div class="flex flex-wrap justify-end gap-2">
+                <button type="button" onclick="cancelImport()" class="px-3 py-2 rounded-lg text-xs bg-slate-200 dark:bg-slate-800">Cancel</button>
+                <button type="button" onclick="applyImport('merge')" class="px-3 py-2 rounded-lg text-xs bg-emerald-600 text-white">Merge</button>
+                <button type="button" onclick="applyImport('replace')" class="px-3 py-2 rounded-lg text-xs bg-rose-600 text-white">Replace</button>
+            </div>
+        </section>
+    </div>
+
     <!-- Custom Modal Confirm Dialog Component -->
-    <div id="custom-dialog-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    <div id="custom-dialog-modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-message" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
         <div class="glass-panel w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 text-center">
             <div id="dialog-icon-wrapper" class="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center bg-red-500/20 text-red-500 text-xl">
                 <i class="fa-solid fa-triangle-exclamation"></i>
@@ -483,13 +555,209 @@
     </div>
 
     <!-- Custom Toast Notifications Container -->
-    <div id="toast-container" class="fixed bottom-5 left-5 z-50 flex flex-col gap-2 pointer-events-none">
+    <div id="toast-container" role="status" aria-live="polite" class="fixed bottom-5 left-5 z-50 flex flex-col gap-2 pointer-events-none">
         <!-- Toast messages are dynamically injected here -->
     </div>
 
     <script>
+        const englishText = {
+            'Kanban & Productivité Custom': 'Kanban & Custom Productivity',
+            'Rechercher...': 'Search...',
+            'Minuteur Pomodoro': 'Pomodoro timer',
+            'Statistiques de Productivité': 'Productivity statistics',
+            'Sauvegarde JSON': 'JSON backup',
+            'Exporter JSON': 'Export JSON',
+            'Importer JSON': 'Import JSON',
+            'Nouvelle tâche': 'New task',
+            'Toutes catégories': 'All categories',
+            'Travail': 'Work',
+            'Personnel': 'Personal',
+            'Toutes priorités': 'All priorities',
+            'À faire': 'To Do',
+            'Sélectionner une date': 'Select a date',
+            'Haute': 'High',
+            'Moyenne': 'Medium',
+            'Basse': 'Low',
+            'Tri par défaut': 'Default sort',
+            "Date d'échéance": 'Due date',
+            'Réinitialiser filtres': 'Reset filters',
+            'À Faire': 'To Do',
+            'En cours': 'In Progress',
+            'Terminé': 'Done',
+            'Session Travail': 'Work session',
+            'Aucune tâche liée': 'No task linked',
+            'Démarrer': 'Start',
+            'Créer une nouvelle tâche': 'Create a new task',
+            'Éditer la tâche': 'Edit task',
+            'Titre de la tâche *': 'Task title *',
+            'Ex: Rédiger le rapport mensuel...': 'e.g. Write the monthly report...',
+            'Description': 'Description',
+            'Détails de la tâche...': 'Task details...',
+            'Statut': 'Status',
+            'Priorité': 'Priority',
+            'Catégorie': 'Category',
+            'Récurrence': 'Recurrence',
+            'Aucune': 'None',
+            'Quotidienne': 'Daily',
+            'Hebdomadaire': 'Weekly',
+            'Mensuelle': 'Monthly',
+            'Échéance': 'Due date',
+            'Durée estimée (minutes)': 'Estimated duration (minutes)',
+            "Couleur personnalisée d'étiquette": 'Custom task color',
+            'Sous-tâches (Checklist)': 'Subtasks (checklist)',
+            'Sous-tâches': 'Subtasks',
+            'Tâches': 'Tasks',
+            'Ajouter une étape...': 'Add a step...',
+            'Ajouter': 'Add',
+            'Annuler': 'Cancel',
+            'Enregistrer': 'Save',
+            'Temps estimé total': 'Total estimated time',
+            'Temps réellement suivi': 'Actual tracked time',
+            'Taux de complétion': 'Completion rate',
+            'Avancement global': 'Overall progress',
+            'Tâches': 'Tasks',
+            'Fermer': 'Close',
+            'Rechercher une tâche, tag...': 'Search tasks, categories, or status...',
+            'Confirmation': 'Confirmation',
+            'Êtes-vous sûr de vouloir effectuer cette action ?': 'Are you sure you want to continue?',
+            'Confirmer': 'Confirm',
+            "Aujourd'hui": 'Today',
+            'Demain': 'Tomorrow',
+            'Settings': 'Settings',
+            'Language': 'Language',
+            'Theme': 'Theme',
+            'Browser notifications': 'Browser notifications',
+            'Sound alert': 'Sound alert',
+            'Import backup': 'Import backup',
+            'Choose how to apply the selected backup.': 'Choose how to apply the selected backup.',
+            'All tasks': 'All tasks',
+            'Overdue': 'Overdue',
+            'Due soon': 'Due soon',
+            'Tâche supprimée': 'Task deleted',
+            'Tâche mise à jour avec succès': 'Task updated',
+            'Nouvelle tâche créée': 'Task created',
+            'Filtres réinitialisés': 'Filters reset',
+            'Format JSON invalide': 'Invalid backup format',
+            'Erreur lors de la lecture du fichier': 'Could not read the selected file',
+            'Données locales invalides': 'Stored task data is invalid',
+            'Données importées avec succès': 'Backup imported',
+            'Données exportées au format JSON': 'Backup exported as JSON',
+            'Minuteur lié à': 'Timer linked to',
+            'Pomodoro terminé ! Prenez une pause.': 'Pomodoro complete. Take a break.',
+            'Notifications refusées par le navigateur': 'Notifications are blocked by the browser',
+            'Tâche déplacée vers': 'Task moved to',
+            'Supprimer la tâche': 'Delete task',
+            'Êtes-vous sûr de vouloir supprimer définitivement cette tâche ?': 'Delete this task permanently?'
+        };
+        const frenchText = {
+            ...Object.fromEntries(Object.entries(englishText).map(([french, english]) => [english, french])),
+            'Settings': 'Paramètres',
+            'Language': 'Langue',
+            'Theme': 'Thème',
+            'Close settings': 'Fermer les paramètres',
+            'Browser notifications': 'Notifications du navigateur',
+            'Sound alert': 'Alerte sonore',
+            'Import backup': 'Importer une sauvegarde',
+            'Choose how to apply the selected backup.': 'Choisissez comment appliquer cette sauvegarde.',
+            'All tasks': 'Toutes les tâches',
+            'Overdue': 'En retard',
+            'Due soon': 'À échéance bientôt',
+            'No matching tasks': 'Aucune tâche correspondante',
+            'Search tasks, categories, or status...': 'Rechercher des tâches, catégories ou statuts...',
+            'Actual tracked time': 'Temps réellement suivi',
+            'No task linked': 'Aucune tâche liée',
+            'Work session': 'Session de travail',
+            'Notifications are blocked by the browser': 'Les notifications sont bloquées par le navigateur',
+            'Could not save changes. Browser storage may be full.': 'Impossible d’enregistrer. Le stockage du navigateur est peut-être plein.',
+            'Import contains invalid task data': 'La sauvegarde contient des tâches invalides',
+            'Backup imported': 'Sauvegarde importée',
+            'Backup exported as JSON': 'Sauvegarde exportée au format JSON',
+            'Task moved to': 'Tâche déplacée vers',
+            'Move task to': 'Déplacer la tâche vers',
+            'Move to': 'Déplacer vers',
+            'Edit task': 'Modifier la tâche',
+            'Delete task': 'Supprimer la tâche',
+            'Pomodoro timer': 'Minuteur Pomodoro',
+            'To Do': 'À Faire',
+            'In Progress': 'En cours',
+            'Done': 'Terminé',
+            'High': 'Haute',
+            'Medium': 'Moyenne',
+            'Low': 'Basse',
+            'Daily': 'Quotidienne',
+            'Weekly': 'Hebdomadaire',
+            'Monthly': 'Mensuelle',
+            'None': 'Aucune',
+            'No recurrence': 'Aucune',
+            'Pomodoro Timer': 'Minuteur Pomodoro',
+            'Search tasks': 'Rechercher des tâches',
+            'Due date filters': 'Filtres d’échéance',
+            'Merge': 'Fusionner',
+            'Replace': 'Remplacer',
+            'Cancel': 'Annuler',
+            'Task': 'Tâche',
+            'No due date': 'Sans échéance',
+            'Pomodoro complete for': 'Pomodoro terminé pour',
+            'Stored task data is invalid': 'Données locales invalides',
+            'Remove subtask': 'Supprimer la sous-tâche',
+            'Select task color': 'Choisir la couleur de la tâche'
+        };
+
+        function readStoredJSON(key, fallback) {
+            try {
+                const value = localStorage.getItem(key);
+                return value ? JSON.parse(value) : fallback;
+            } catch (error) {
+                return fallback;
+            }
+        }
+
+        function readLegacyTheme() {
+            try {
+                const legacyTheme = localStorage.getItem('theme');
+                return ['light', 'dark'].includes(legacyTheme) ? legacyTheme : 'system';
+            } catch (error) {
+                return 'system';
+            }
+        }
+
+        let settings = { language: 'system', theme: readLegacyTheme(), notifications: false, sound: false, ...readStoredJSON('taskmaster_settings', {}) };
+        let activeLanguage = 'en';
+
+        function detectedLanguage() {
+            return (navigator.language || 'en-US').toLowerCase().startsWith('fr') ? 'fr' : 'en';
+        }
+
+        function tr(text) {
+            if (activeLanguage === 'fr') return frenchText[text] || text;
+            return englishText[text] || text;
+        }
+
+        function translateStaticUI() {
+            const replacements = activeLanguage === 'en'
+                ? { ...englishText, ...Object.fromEntries(Object.entries(frenchText).map(([english, french]) => [french, english])) }
+                : frenchText;
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            let node;
+            while ((node = walker.nextNode())) {
+                const value = node.nodeValue.trim();
+                if (!value || !replacements[value]) continue;
+                const start = node.nodeValue.indexOf(value);
+                node.nodeValue = node.nodeValue.slice(0, start) + replacements[value] + node.nodeValue.slice(start + value.length);
+            }
+            document.querySelectorAll('[placeholder], [data-tooltip], [aria-label]').forEach(element => {
+                ['placeholder', 'data-tooltip', 'aria-label'].forEach(attribute => {
+                    const value = element.getAttribute(attribute);
+                    if (value && replacements[value]) element.setAttribute(attribute, replacements[value]);
+                });
+            });
+            document.documentElement.lang = activeLanguage === 'fr' ? 'fr-FR' : 'en-US';
+            document.title = activeLanguage === 'fr' ? 'TaskFlow - Kanban & Productivité' : 'TaskFlow - Kanban & Productivity';
+        }
+
         /* State Variables */
-        let tasks = JSON.parse(localStorage.getItem('taskmaster_tasks')) || [
+        let tasks = readStoredJSON('taskmaster_tasks', null);
+        if (!Array.isArray(tasks)) tasks = [
             {
                 id: '1',
                 title: 'Concevoir la maquette Kanban',
@@ -524,50 +792,98 @@
             }
         ];
 
-        let categories = ['Travail', 'Dev', 'Design', 'Personnel'];
-        let activeFilters = { category: 'all', priority: 'all', sortBy: 'default' };
+        let categories = readStoredJSON('taskmaster_categories', null);
+        if (!Array.isArray(categories) || !categories.every(category => typeof category === 'string')) categories = ['Travail', 'Dev', 'Design', 'Personnel'];
+        categories = [...new Set(categories.filter(category => category.trim() && category.length <= 60))];
+        if (!categories.length) categories = ['Travail', 'Dev', 'Design', 'Personnel'];
+        let pomodoroSessions = readStoredJSON('taskmaster_sessions', []);
+        if (!Array.isArray(pomodoroSessions)) pomodoroSessions = [];
+        let storedTasksInvalid = false;
+        if (Array.isArray(tasks)) {
+            const validatedTasks = normalizeImportedTasks(tasks);
+            if (validatedTasks) tasks = validatedTasks;
+            else {
+                tasks = [];
+                storedTasksInvalid = true;
+            }
+        }
+        pomodoroSessions = normalizeSessionHistory(pomodoroSessions);
+        let activeFilters = { category: 'all', priority: 'all', sortBy: 'default', due: 'all' };
         let draggedTaskId = null;
         let tempSubtasks = [];
         let activeCustomColor = '#6366f1';
-        let selectedDatePickerDate = new Date().toISOString().split('T')[0];
+        let selectedDatePickerDate = localDateString();
 
         // Pomodoro State
         let pomodoroTimer = null;
         let pomodoroSeconds = 25 * 60;
         let pomodoroRunning = false;
         let pomodoroActiveTaskId = null;
+        let pomodoroStartedAt = null;
+        let pendingImport = null;
+        let searchResultIndex = -1;
 
         /* Initialization */
         window.onload = function() {
-            /* Initialize System Theme */
-            if (localStorage.getItem('theme') === 'light') {
-                document.documentElement.classList.remove('dark');
-                document.getElementById('theme-icon').className = 'fa-solid fa-sun text-amber-500';
-            }
-
-            /* Initialize Filters & Controls */
+            applySettings();
+            if (storedTasksInvalid) showToast(tr('Stored task data is invalid'), 'error');
+            refreshSystemSettingLabels();
             renderCustomFilterSelects();
             renderCustomModalSelects();
             renderCustomColorPicker();
             renderCustomDatePicker();
-
-            /* Render Main Task List */
+            renderDueFilterButtons();
             renderTasks();
 
-            /* Keyboard Shortcuts Listener */
+            const themePreference = window.matchMedia('(prefers-color-scheme: dark)');
+            themePreference.addEventListener('change', () => {
+                if (settings.theme === 'system') applyTheme();
+            });
+            window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', refreshSystemSettingLabels);
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshSystemSettingLabels);
+
             document.addEventListener('keydown', (e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                     e.preventDefault();
                     openSearchModal();
                 }
+                if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n' && !e.target.matches('input, textarea, select')) {
+                    e.preventDefault();
+                    openTaskModal();
+                }
+                if (!document.getElementById('search-modal').classList.contains('hidden')) {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        moveSearchSelection(e.key === 'ArrowDown' ? 1 : -1);
+                    } else if (e.key === 'Enter' && searchResultIndex >= 0) {
+                        e.preventDefault();
+                        openSearchResult(searchResultIndex);
+                    }
+                }
+                const activeModal = [...document.querySelectorAll('[role="dialog"]')].find(modal => !modal.classList.contains('hidden'));
+                if (e.key === 'Tab' && activeModal) {
+                    const focusable = [...activeModal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+                    const first = focusable[0];
+                    const last = focusable[focusable.length - 1];
+                    if (first && e.shiftKey && (document.activeElement === first || !activeModal.contains(document.activeElement))) {
+                        e.preventDefault();
+                        last.focus();
+                    } else if (last && !e.shiftKey && (document.activeElement === last || !activeModal.contains(document.activeElement))) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
                 if (e.key === 'Escape') {
                     closeSearchModal();
                     closeTaskModal();
                     toggleStatsModal(false);
+                    closeSettingsModal();
+                    cancelImport();
+                    document.getElementById('custom-dialog-modal').classList.add('hidden');
+                    document.querySelectorAll('.custom-select-dropdown').forEach(dropdown => dropdown.classList.add('hidden'));
                 }
             });
 
-            /* Outside Click Handlers */
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('#data-menu') && !e.target.closest('button[onclick="toggleDataMenu()"]')) {
                     document.getElementById('data-menu').classList.add('hidden');
@@ -585,8 +901,115 @@
         };
 
         /* Local Storage Helper */
+        function persistState(next = { tasks, categories, settings, pomodoroSessions }) {
+            const entries = {
+                taskmaster_tasks: next.tasks,
+                taskmaster_categories: next.categories,
+                taskmaster_settings: next.settings,
+                taskmaster_sessions: next.pomodoroSessions
+            };
+            const previous = {};
+            try {
+                Object.keys(entries).forEach(key => { previous[key] = localStorage.getItem(key); });
+                Object.entries(entries).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+                return true;
+            } catch (error) {
+                Object.entries(previous).forEach(([key, value]) => {
+                    try {
+                        if (value === null) localStorage.removeItem(key);
+                        else localStorage.setItem(key, value);
+                    } catch (rollbackError) {
+                        return;
+                    }
+                });
+                showToast('Could not save changes. Browser storage may be full.', 'error');
+                return false;
+            }
+        }
+
         function saveToLocalStorage() {
-            localStorage.setItem('taskmaster_tasks', JSON.stringify(tasks));
+            return persistState();
+        }
+
+        function applyTheme() {
+            const root = document.documentElement;
+            const theme = settings.theme === 'system'
+                ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                : settings.theme;
+            root.classList.remove('dark', 'theme-taskmaster');
+            if (theme === 'dark') root.classList.add('dark');
+            if (theme === 'taskmaster') root.classList.add('theme-taskmaster');
+            root.dataset.theme = theme;
+        }
+
+        function refreshSystemSettingLabels() {
+            const language = detectedLanguage() === 'fr' ? 'Français (FR)' : 'English (US)';
+            const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light';
+            const languageOption = document.querySelector('#language-setting option[value="system"]');
+            const themeOption = document.querySelector('#theme-setting option[value="system"]');
+            if (languageOption) languageOption.textContent = `System (${language})`;
+            if (themeOption) themeOption.textContent = `System (${theme})`;
+        }
+
+        function applySettings() {
+            settings.language = ['system', 'en', 'fr'].includes(settings.language) ? settings.language : 'system';
+            settings.theme = ['system', 'light', 'dark', 'taskmaster'].includes(settings.theme) ? settings.theme : 'system';
+            settings.notifications = settings.notifications === true;
+            settings.sound = settings.sound === true;
+            activeLanguage = settings.language === 'system' ? detectedLanguage() : settings.language;
+            applyTheme();
+            translateStaticUI();
+            refreshSystemSettingLabels();
+            const languageSelect = document.getElementById('language-setting');
+            const themeSelect = document.getElementById('theme-setting');
+            if (languageSelect) languageSelect.value = settings.language;
+            if (themeSelect) themeSelect.value = settings.theme;
+            const notificationToggle = document.getElementById('notifications-setting');
+            const soundToggle = document.getElementById('sound-setting');
+            if (notificationToggle) notificationToggle.checked = settings.notifications;
+            if (soundToggle) soundToggle.checked = settings.sound;
+            const searchShortcut = document.querySelector('#search-trigger kbd');
+            if (searchShortcut) searchShortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl+K';
+        }
+
+        function updateSetting(key, value) {
+            if (key === 'notifications' && value && !('Notification' in window)) {
+                settings.notifications = false;
+                applySettings();
+                showToast(tr('Notifications are blocked by the browser'), 'error');
+                return;
+            }
+            if (key === 'notifications' && value && 'Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission().then(permission => {
+                    settings.notifications = permission === 'granted';
+                    applySettings();
+                    saveToLocalStorage();
+                    if (!settings.notifications) showToast(tr('Notifications are blocked by the browser'), 'error');
+                }).catch(() => showToast(tr('Notifications are blocked by the browser'), 'error'));
+                return;
+            }
+            settings[key] = value;
+            applySettings();
+            renderCustomFilterSelects();
+            renderCustomModalSelects();
+            renderDueFilterButtons();
+            renderTasks();
+            saveToLocalStorage();
+        }
+
+        function openSettingsModal() {
+            applySettings();
+            const modal = document.getElementById('settings-modal');
+            modal.classList.remove('hidden');
+            modal.querySelector('select').focus();
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                document.getElementById('settings-trigger').focus();
+            }
         }
 
         /* Toast Notification System */
@@ -600,7 +1023,11 @@
             }`;
             
             const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info';
-            toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i> <span>${message}</span>`;
+            const iconElement = document.createElement('i');
+            iconElement.className = `fa-solid ${icon} text-sm`;
+            const messageElement = document.createElement('span');
+            messageElement.textContent = message;
+            toast.append(iconElement, messageElement);
             
             container.appendChild(toast);
             setTimeout(() => {
@@ -618,14 +1045,20 @@
 
             const cancelBtn = document.getElementById('dialog-cancel-btn');
             const confirmBtn = document.getElementById('dialog-confirm-btn');
+            const previousFocus = document.activeElement;
 
             const close = () => modal.classList.add('hidden');
             
-            cancelBtn.onclick = close;
+            cancelBtn.onclick = () => {
+                close();
+                if (previousFocus && previousFocus.isConnected) previousFocus.focus();
+            };
             confirmBtn.onclick = () => {
                 close();
                 onConfirm();
+                document.getElementById('new-task-trigger').focus();
             };
+            confirmBtn.focus();
         }
 
         /* Custom Color Picker Engine */
@@ -633,7 +1066,7 @@
             const colors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#3b82f6'];
             const container = document.getElementById('custom-color-picker');
             container.innerHTML = colors.map(c => `
-                <button type="button" onclick="selectCustomColor('${c}')" 
+                <button type="button" aria-label="${escapeHTML(tr('Select task color'))} ${c}" onclick="selectCustomColor('${c}')"
                         class="w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${activeCustomColor === c ? 'border-indigo-500 scale-110 shadow-md' : 'border-transparent'}"
                         style="background-color: ${c}">
                     ${activeCustomColor === c ? '<i class="fa-solid fa-check text-white text-[10px]"></i>' : ''}
@@ -651,16 +1084,16 @@
             const wrapper = document.getElementById('custom-datepicker-wrapper');
             wrapper.innerHTML = `
                 <button type="button" onclick="toggleDatePickerPopup()" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-xs text-left">
-                    <span id="datepicker-display-text">${selectedDatePickerDate || 'Sélectionner une date'}</span>
+                    <span id="datepicker-display-text">${escapeHTML(selectedDatePickerDate || tr('Sélectionner une date'))}</span>
                     <i class="fa-regular fa-calendar text-indigo-500"></i>
                 </button>
                 
                 <div id="datepicker-popup" class="hidden absolute top-full left-0 mt-2 w-64 glass-panel rounded-2xl p-3 shadow-2xl border border-slate-200 dark:border-slate-700 z-50">
                     <div class="flex items-center justify-between mb-2">
-                        <button type="button" onclick="quickSetDate('today')" class="px-2 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded text-[10px] font-semibold">Aujourd'hui</button>
-                        <button type="button" onclick="quickSetDate('tomorrow')" class="px-2 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded text-[10px] font-semibold">Demain</button>
+                        <button type="button" onclick="quickSetDate('today')" class="px-2 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded text-[10px] font-semibold">${tr("Aujourd'hui")}</button>
+                        <button type="button" onclick="quickSetDate('tomorrow')" class="px-2 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded text-[10px] font-semibold">${tr('Demain')}</button>
                     </div>
-                    <input type="date" id="native-hidden-date" value="${selectedDatePickerDate}" onchange="onDatePickerChange(this.value)" class="w-full text-xs p-1 bg-transparent border rounded text-slate-800 dark:text-slate-100">
+                    <input type="date" id="native-hidden-date" value="${escapeHTML(selectedDatePickerDate)}" onchange="onDatePickerChange(this.value)" class="w-full text-xs p-1 bg-transparent border rounded text-slate-800 dark:text-slate-100">
                 </div>
             `;
         }
@@ -679,11 +1112,17 @@
         function quickSetDate(option) {
             const today = new Date();
             if (option === 'tomorrow') today.setDate(today.getDate() + 1);
-            const formatted = today.toISOString().split('T')[0];
+            const formatted = localDateString(today);
             onDatePickerChange(formatted);
         }
 
         /* Custom Select Component Utility */
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[character]);
+        }
+
         function createCustomSelect(containerId, options, selectedValue, onChangeCallback) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -695,16 +1134,16 @@
                         class="w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-slate-200/60 dark:bg-slate-800/80 border border-transparent hover:border-slate-300 dark:hover:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 transition">
                     <span class="flex items-center gap-2 truncate">
                         ${selectedOpt.icon ? `<i class="${selectedOpt.icon}"></i>` : ''}
-                        <span>${selectedOpt.label}</span>
+                        <span>${escapeHTML(selectedOpt.label)}</span>
                     </span>
                     <i class="fa-solid fa-chevron-down text-[10px] opacity-60"></i>
                 </button>
                 <div class="custom-select-dropdown hidden absolute left-0 right-0 mt-1 rounded-xl glass-panel border border-slate-200 dark:border-slate-700 shadow-xl py-1 z-50 max-h-48 overflow-y-auto">
                     ${options.map(opt => `
-                        <button type="button" onclick="selectCustomOption('${containerId}', '${opt.value}', '${onChangeCallback}')"
+                        <button type="button" onclick="selectCustomOption('${containerId}', '${encodeURIComponent(String(opt.value))}', '${onChangeCallback}')"
                                 class="w-full text-left px-3 py-1.5 text-xs hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2 transition ${opt.value === selectedValue ? 'font-bold text-indigo-600' : ''}">
                             ${opt.icon ? `<i class="${opt.icon}"></i>` : ''}
-                            <span>${opt.label}</span>
+                            <span>${escapeHTML(opt.label)}</span>
                         </button>
                     `).join('')}
                 </div>
@@ -721,28 +1160,44 @@
 
         function selectCustomOption(containerId, value, callbackName) {
             document.querySelector(`#${containerId} .custom-select-dropdown`).classList.add('hidden');
-            window[callbackName](value);
+            window[callbackName](decodeURIComponent(value));
         }
 
         /* Filter Select Options Renderers */
         function renderCustomFilterSelects() {
             createCustomSelect('filter-category-select', [
-                { value: 'all', label: 'Toutes catégories', icon: 'fa-solid fa-layer-group' },
-                ...categories.map(c => ({ value: c, label: c, icon: 'fa-solid fa-tag' }))
+                { value: 'all', label: tr('Toutes catégories'), icon: 'fa-solid fa-layer-group' },
+                ...categories.map(c => ({ value: c, label: tr(c), icon: 'fa-solid fa-tag' }))
             ], activeFilters.category, 'onCategoryFilterChange');
 
             createCustomSelect('filter-priority-select', [
-                { value: 'all', label: 'Toutes priorités', icon: 'fa-solid fa-flag' },
-                { value: 'high', label: 'Haute', icon: 'fa-solid fa-circle text-rose-500' },
-                { value: 'medium', label: 'Moyenne', icon: 'fa-solid fa-circle text-amber-500' },
-                { value: 'low', label: 'Basse', icon: 'fa-solid fa-circle text-emerald-500' }
+                { value: 'all', label: tr('Toutes priorités'), icon: 'fa-solid fa-flag' },
+                { value: 'high', label: tr('Haute'), icon: 'fa-solid fa-circle text-rose-500' },
+                { value: 'medium', label: tr('Moyenne'), icon: 'fa-solid fa-circle text-amber-500' },
+                { value: 'low', label: tr('Basse'), icon: 'fa-solid fa-circle text-emerald-500' }
             ], activeFilters.priority, 'onPriorityFilterChange');
 
             createCustomSelect('sort-by-select', [
-                { value: 'default', label: 'Tri par défaut', icon: 'fa-solid fa-arrow-down-short-wide' },
-                { value: 'dueDate', label: 'Date d\'échéance', icon: 'fa-regular fa-calendar' },
-                { value: 'priority', label: 'Priorité', icon: 'fa-solid fa-arrow-up-wide-short' }
+                { value: 'default', label: tr('Tri par défaut'), icon: 'fa-solid fa-arrow-down-short-wide' },
+                { value: 'dueDate', label: tr("Date d'échéance"), icon: 'fa-regular fa-calendar' },
+                { value: 'priority', label: tr('Priorité'), icon: 'fa-solid fa-arrow-up-wide-short' }
             ], activeFilters.sortBy, 'onSortChange');
+        }
+
+        function renderDueFilterButtons() {
+            const labels = { all: 'All tasks', overdue: 'Overdue', upcoming: 'Due soon' };
+            document.querySelectorAll('[data-due-filter]').forEach(button => {
+                const selected = button.dataset.dueFilter === activeFilters.due;
+                button.textContent = tr(labels[button.dataset.dueFilter]);
+                button.setAttribute('aria-pressed', String(selected));
+                button.className = `due-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium ${selected ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}`;
+            });
+        }
+
+        function setDueFilter(value) {
+            activeFilters.due = value;
+            renderDueFilterButtons();
+            renderTasks();
         }
 
         function onCategoryFilterChange(val) { activeFilters.category = val; renderCustomFilterSelects(); renderTasks(); }
@@ -750,10 +1205,11 @@
         function onSortChange(val) { activeFilters.sortBy = val; renderCustomFilterSelects(); renderTasks(); }
 
         function resetFilters() {
-            activeFilters = { category: 'all', priority: 'all', sortBy: 'default' };
+            activeFilters = { category: 'all', priority: 'all', sortBy: 'default', due: 'all' };
             renderCustomFilterSelects();
+            renderDueFilterButtons();
             renderTasks();
-            showToast('Filtres réinitialisés');
+            showToast(tr('Filtres réinitialisés'));
         }
 
         /* Modal Custom Selects Configuration */
@@ -761,24 +1217,24 @@
 
         function renderCustomModalSelects() {
             createCustomSelect('modal-status-select', [
-                { value: 'todo', label: 'À faire', icon: 'fa-regular fa-circle' },
-                { value: 'in_progress', label: 'En cours', icon: 'fa-solid fa-spinner' },
-                { value: 'done', label: 'Terminé', icon: 'fa-regular fa-circle-check' }
+                { value: 'todo', label: tr('À faire'), icon: 'fa-regular fa-circle' },
+                { value: 'in_progress', label: tr('En cours'), icon: 'fa-solid fa-spinner' },
+                { value: 'done', label: tr('Terminé'), icon: 'fa-regular fa-circle-check' }
             ], modalFormValues.status, 'onModalStatusChange');
 
             createCustomSelect('modal-priority-select', [
-                { value: 'low', label: 'Basse', icon: 'fa-solid fa-circle text-emerald-500' },
-                { value: 'medium', label: 'Moyenne', icon: 'fa-solid fa-circle text-amber-500' },
-                { value: 'high', label: 'Haute', icon: 'fa-solid fa-circle text-rose-500' }
+                { value: 'low', label: tr('Basse'), icon: 'fa-solid fa-circle text-emerald-500' },
+                { value: 'medium', label: tr('Moyenne'), icon: 'fa-solid fa-circle text-amber-500' },
+                { value: 'high', label: tr('Haute'), icon: 'fa-solid fa-circle text-rose-500' }
             ], modalFormValues.priority, 'onModalPriorityChange');
 
-            createCustomSelect('modal-category-select', categories.map(c => ({ value: c, label: c, icon: 'fa-solid fa-tag' })), modalFormValues.category, 'onModalCategoryChange');
+            createCustomSelect('modal-category-select', categories.map(c => ({ value: c, label: tr(c), icon: 'fa-solid fa-tag' })), modalFormValues.category, 'onModalCategoryChange');
 
             createCustomSelect('modal-recurrence-select', [
-                { value: 'none', label: 'Aucune', icon: 'fa-solid fa-slash' },
-                { value: 'daily', label: 'Quotidienne', icon: 'fa-solid fa-arrows-rotate' },
-                { value: 'weekly', label: 'Hebdomadaire', icon: 'fa-solid fa-calendar-week' },
-                { value: 'monthly', label: 'Mensuelle', icon: 'fa-solid fa-calendar-days' }
+                { value: 'none', label: tr('Aucune'), icon: 'fa-solid fa-slash' },
+                { value: 'daily', label: tr('Quotidienne'), icon: 'fa-solid fa-arrows-rotate' },
+                { value: 'weekly', label: tr('Hebdomadaire'), icon: 'fa-solid fa-calendar-week' },
+                { value: 'monthly', label: tr('Mensuelle'), icon: 'fa-solid fa-calendar-days' }
             ], modalFormValues.recurrence, 'onModalRecurrenceChange');
         }
 
@@ -792,9 +1248,10 @@
             const filtered = tasks.filter(t => {
                 if (activeFilters.category !== 'all' && t.category !== activeFilters.category) return false;
                 if (activeFilters.priority !== 'all' && t.priority !== activeFilters.priority) return false;
+                if (!matchesDueFilter(t, activeFilters.due)) return false;
                 return true;
             }).sort((a, b) => {
-                if (activeFilters.sortBy === 'dueDate') return new Date(a.dueDate) - new Date(b.dueDate);
+                if (activeFilters.sortBy === 'dueDate') return (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31');
                 if (activeFilters.sortBy === 'priority') {
                     const pMap = { high: 3, medium: 2, low: 1 };
                     return pMap[b.priority] - pMap[a.priority];
@@ -811,47 +1268,89 @@
             });
         }
 
+        function localDateString(date = new Date()) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function matchesDueFilter(task, filter) {
+            if (filter === 'all' || task.status === 'done' || !task.dueDate) return filter === 'all';
+            const today = localDateString();
+            if (filter === 'overdue') return task.dueDate < today;
+            if (filter === 'upcoming') {
+                const limit = new Date(`${today}T00:00:00`);
+                limit.setDate(limit.getDate() + 7);
+                return task.dueDate >= today && task.dueDate <= localDateString(limit);
+            }
+            return true;
+        }
+
+        function formatDueDate(value) {
+            if (!value) return tr('No due date');
+            const date = new Date(`${value}T00:00:00`);
+            return Number.isNaN(date.getTime()) ? escapeHTML(value) : new Intl.DateTimeFormat(activeLanguage === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' }).format(date);
+        }
+
+        function formatTrackedDuration(seconds) {
+            if (seconds >= 3600) return `${new Intl.NumberFormat(activeLanguage === 'fr' ? 'fr-FR' : 'en-US', { maximumFractionDigits: 1 }).format(seconds / 3600)}h`;
+            return `${Math.round(seconds / 60)}m`;
+        }
+
         function createTaskCardHTML(task) {
             const completedSubtasks = task.subtasks ? task.subtasks.filter(s => s.completed).length : 0;
             const totalSubtasks = task.subtasks ? task.subtasks.length : 0;
+            const trackedSeconds = pomodoroSessions.filter(session => session.taskId === task.id).reduce((total, session) => total + session.durationSeconds, 0);
             const priorityBadge = task.priority === 'high' ? 'bg-rose-500/20 text-rose-500' :
                                   task.priority === 'medium' ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-500/20 text-emerald-500';
+            const statuses = ['todo', 'in_progress', 'done'];
+            const statusLabels = { todo: tr('À Faire'), in_progress: tr('En cours'), done: tr('Terminé') };
+            const statusIndex = statuses.indexOf(task.status);
+            const previousStatus = statuses[statusIndex - 1];
+            const nextStatus = statuses[statusIndex + 1];
+            const today = localDateString();
+            const dueClass = task.status !== 'done' && task.dueDate < today ? 'text-rose-600 dark:text-rose-400 font-semibold' :
+                task.status !== 'done' && task.dueDate && task.dueDate <= localDateString(new Date(new Date(`${today}T00:00:00`).setDate(new Date(`${today}T00:00:00`).getDate() + 7))) ? 'text-amber-600 dark:text-amber-400 font-semibold' : '';
+            const safeColor = /^#[0-9a-f]{6}$/i.test(task.color || '') ? task.color : '#6366f1';
 
             return `
-                <div draggable="true" 
+                <article role="group" aria-label="${escapeHTML(task.title)}" draggable="true"
                      ondragstart="handleDragStart(event, '${task.id}')" 
                      ondragend="handleDragEnd(event)"
                      class="group relative glass-panel rounded-xl p-3.5 border-l-4 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing animate-fade-in"
-                     style="border-left-color: ${task.color || '#6366f1'}">
+                     style="border-left-color: ${safeColor}">
                     
                     <!-- Card Top Header -->
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${priorityBadge}">
-                            ${task.priority.toUpperCase()}
+                            ${escapeHTML(tr(({ high: 'Haute', medium: 'Moyenne', low: 'Basse' })[task.priority] || task.priority))}
                         </span>
                         
-                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="attachPomodoroToTask('${task.id}')" data-tooltip="Pomodoro" class="p-1 hover:text-indigo-500 text-slate-400 text-xs">
+                        <div class="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
+                            ${previousStatus ? `<button type="button" onclick="moveTask('${task.id}', -1)" aria-label="${escapeHTML(tr('Move task to') + ' ' + statusLabels[previousStatus])}" data-tooltip="${escapeHTML(tr('Move to') + ' ' + statusLabels[previousStatus])}" class="p-1 hover:text-indigo-500 text-slate-400 text-xs"><i class="fa-solid fa-arrow-left"></i></button>` : ''}
+                            ${nextStatus ? `<button type="button" onclick="moveTask('${task.id}', 1)" aria-label="${escapeHTML(tr('Move task to') + ' ' + statusLabels[nextStatus])}" data-tooltip="${escapeHTML(tr('Move to') + ' ' + statusLabels[nextStatus])}" class="p-1 hover:text-indigo-500 text-slate-400 text-xs"><i class="fa-solid fa-arrow-right"></i></button>` : ''}
+                            <button type="button" onclick="attachPomodoroToTask('${task.id}')" aria-label="${escapeHTML(tr('Pomodoro timer'))}" data-tooltip="${escapeHTML(tr('Pomodoro timer'))}" class="p-1 hover:text-indigo-500 text-slate-400 text-xs">
                                 <i class="fa-solid fa-stopwatch"></i>
                             </button>
-                            <button onclick="editTask('${task.id}')" data-tooltip="Éditer" class="p-1 hover:text-indigo-500 text-slate-400 text-xs">
+                            <button type="button" onclick="editTask('${task.id}')" aria-label="${escapeHTML(tr('Edit task'))}" data-tooltip="${escapeHTML(tr('Edit task'))}" class="p-1 hover:text-indigo-500 text-slate-400 text-xs">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
-                            <button onclick="confirmDeleteTask('${task.id}')" data-tooltip="Supprimer" class="p-1 hover:text-rose-500 text-slate-400 text-xs">
+                            <button type="button" onclick="confirmDeleteTask('${task.id}')" aria-label="${escapeHTML(tr('Delete task'))}" data-tooltip="${escapeHTML(tr('Delete task'))}" class="p-1 hover:text-rose-500 text-slate-400 text-xs">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
                     </div>
 
                     <!-- Title & Description -->
-                    <h4 class="font-semibold text-xs text-slate-800 dark:text-slate-100 mb-1 leading-snug">${task.title}</h4>
-                    ${task.description ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-2 font-normal">${task.description}</p>` : ''}
+                    <h4 class="font-semibold text-xs text-slate-800 dark:text-slate-100 mb-1 leading-snug">${escapeHTML(task.title)}</h4>
+                    ${task.description ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-2 font-normal">${escapeHTML(task.description)}</p>` : ''}
 
                     <!-- Subtasks Progress Minimal Bar -->
                     ${totalSubtasks > 0 ? `
                         <div class="mb-3">
                             <div class="flex justify-between text-[10px] text-slate-400 mb-1">
-                                <span>Sous-tâches</span>
+                                <span>${tr('Sous-tâches')}</span>
                                 <span>${completedSubtasks}/${totalSubtasks}</span>
                             </div>
                             <div class="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -862,15 +1361,16 @@
 
                     <!-- Card Footer Meta Info -->
                     <div class="flex items-center justify-between text-[10px] text-slate-400 pt-2 border-t border-slate-200/60 dark:border-slate-800">
-                        <span class="flex items-center gap-1">
-                            <i class="fa-regular fa-calendar text-[10px]"></i> ${task.dueDate}
+                            <span class="flex items-center gap-1 ${dueClass}">
+                            <i class="fa-regular fa-calendar text-[10px]"></i> ${escapeHTML(formatDueDate(task.dueDate))}
                         </span>
                         <div class="flex items-center gap-2">
+                            ${trackedSeconds ? `<span data-tooltip="${escapeHTML(tr('Actual tracked time'))}" class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-stopwatch"></i> ${formatTrackedDuration(trackedSeconds)}</span>` : ''}
                             ${task.duration ? `<span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${task.duration}m</span>` : ''}
-                            <span class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${task.category}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${escapeHTML(tr(task.category))}</span>
                         </div>
                     </div>
-                </div>
+                </article>
             `;
         }
 
@@ -904,12 +1404,64 @@
             if (draggedTaskId) {
                 const task = tasks.find(t => t.id === draggedTaskId);
                 if (task && task.status !== targetStatus) {
-                    task.status = targetStatus;
-                    saveToLocalStorage();
-                    renderTasks();
-                    showToast(`Tâche déplacée vers "${targetStatus === 'todo' ? 'À faire' : targetStatus === 'in_progress' ? 'En cours' : 'Terminé'}"`, 'success');
+                    updateTaskStatus(task, targetStatus);
                 }
             }
+        }
+
+        function moveTask(taskId, direction) {
+            const task = tasks.find(item => item.id === taskId);
+            const statuses = ['todo', 'in_progress', 'done'];
+            if (!task) return;
+            const nextStatus = statuses[statuses.indexOf(task.status) + direction];
+            if (nextStatus) updateTaskStatus(task, nextStatus);
+        }
+
+        function updateTaskStatus(task, nextStatus) {
+            const wasDone = task.status === 'done';
+            task.status = nextStatus;
+            if (!wasDone && nextStatus === 'done') createNextRecurringTask(task);
+            saveToLocalStorage();
+            renderTasks();
+            const statusLabel = { todo: tr('À Faire'), in_progress: tr('En cours'), done: tr('Terminé') }[nextStatus];
+            showToast(`${tr('Task moved to')} "${statusLabel}"`, 'success');
+        }
+
+        function incrementDueDate(value, recurrence) {
+            const date = new Date(`${value}T00:00:00Z`);
+            if (Number.isNaN(date.getTime())) return localDateString();
+            if (recurrence === 'daily') date.setUTCDate(date.getUTCDate() + 1);
+            if (recurrence === 'weekly') date.setUTCDate(date.getUTCDate() + 7);
+            if (recurrence === 'monthly') {
+                const day = date.getUTCDate();
+                date.setUTCDate(1);
+                date.setUTCMonth(date.getUTCMonth() + 1);
+                const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+                date.setUTCDate(Math.min(day, lastDay));
+            }
+            return date.toISOString().slice(0, 10);
+        }
+
+        function createNextRecurringTask(task) {
+            if (!['daily', 'weekly', 'monthly'].includes(task.recurrence)) return;
+            if (task.nextOccurrenceId && tasks.some(item => item.id === task.nextOccurrenceId)) return;
+            const nextId = `task_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+            const nextTask = {
+                ...task,
+                id: nextId,
+                status: 'todo',
+                dueDate: incrementDueDate(task.dueDate, task.recurrence),
+                recurrenceSeriesId: task.recurrenceSeriesId || task.id,
+                generatedFromId: task.id,
+                nextOccurrenceId: null,
+                subtasks: (task.subtasks || []).map(subtask => ({
+                    ...subtask,
+                    id: `sub_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                    completed: false
+                }))
+            };
+            task.nextOccurrenceId = nextId;
+            tasks.push(nextTask);
         }
 
         /* Task Modal Operations */
@@ -921,7 +1473,7 @@
 
             if (taskId) {
                 const t = tasks.find(x => x.id === taskId);
-                document.getElementById('modal-title').innerText = 'Éditer la tâche';
+                document.getElementById('modal-title').innerText = tr('Éditer la tâche');
                 document.getElementById('task-id').value = t.id;
                 document.getElementById('task-title-input').value = t.title;
                 document.getElementById('task-desc-input').value = t.description || '';
@@ -929,13 +1481,13 @@
                 modalFormValues = { status: t.status, priority: t.priority, category: t.category, recurrence: t.recurrence || 'none' };
                 activeCustomColor = t.color || '#6366f1';
                 selectedDatePickerDate = t.dueDate;
-                tempSubtasks = [...(t.subtasks || [])];
+                tempSubtasks = (t.subtasks || []).map(subtask => ({ ...subtask }));
             } else {
-                document.getElementById('modal-title').innerText = 'Créer une nouvelle tâche';
+                document.getElementById('modal-title').innerText = tr('Créer une nouvelle tâche');
                 document.getElementById('task-id').value = '';
                 modalFormValues = { status: 'todo', priority: 'medium', category: categories[0], recurrence: 'none' };
                 activeCustomColor = '#6366f1';
-                selectedDatePickerDate = new Date().toISOString().split('T')[0];
+                selectedDatePickerDate = localDateString();
             }
 
             renderCustomModalSelects();
@@ -944,10 +1496,15 @@
             renderSubtasksList();
 
             modal.classList.remove('hidden');
+            document.getElementById('task-title-input').focus();
         }
 
         function closeTaskModal() {
-            document.getElementById('task-modal').classList.add('hidden');
+            const modal = document.getElementById('task-modal');
+            if (!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                document.getElementById('new-task-trigger').focus();
+            }
         }
 
         function addSubtask() {
@@ -979,9 +1536,9 @@
                 <div class="flex items-center justify-between p-2 rounded-lg bg-slate-200/50 dark:bg-slate-800/50 text-xs">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" ${s.completed ? 'checked' : ''} onchange="toggleSubtask('${s.id}')" class="rounded text-indigo-600 focus:ring-0">
-                        <span class="${s.completed ? 'line-through text-slate-400' : ''}">${s.title}</span>
+                        <span class="${s.completed ? 'line-through text-slate-400' : ''}">${escapeHTML(s.title)}</span>
                     </label>
-                    <button type="button" onclick="removeSubtask('${s.id}')" class="text-slate-400 hover:text-rose-500">
+                    <button type="button" aria-label="${escapeHTML(tr('Remove subtask'))}" onclick="removeSubtask('${s.id}')" class="text-slate-400 hover:text-rose-500">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -997,6 +1554,7 @@
 
             if (id) {
                 const t = tasks.find(x => x.id === id);
+                const wasDone = t.status === 'done';
                 t.title = title;
                 t.description = description;
                 t.status = modalFormValues.status;
@@ -1007,7 +1565,8 @@
                 t.dueDate = selectedDatePickerDate;
                 t.duration = duration;
                 t.subtasks = tempSubtasks;
-                showToast('Tâche mise à jour avec succès', 'success');
+                if (!wasDone && t.status === 'done') createNextRecurringTask(t);
+                showToast(tr('Tâche mise à jour avec succès'), 'success');
             } else {
                 const newTask = {
                     id: 'task_' + Date.now(),
@@ -1023,7 +1582,8 @@
                     subtasks: tempSubtasks
                 };
                 tasks.push(newTask);
-                showToast('Nouvelle tâche créée', 'success');
+                if (newTask.status === 'done') createNextRecurringTask(newTask);
+                showToast(tr('Nouvelle tâche créée'), 'success');
             }
 
             saveToLocalStorage();
@@ -1036,11 +1596,11 @@
         }
 
         function confirmDeleteTask(id) {
-            showCustomConfirm('Supprimer la tâche', 'Êtes-vous sûr de vouloir supprimer définitivement cette tâche ?', () => {
+            showCustomConfirm(tr('Supprimer la tâche'), tr('Êtes-vous sûr de vouloir supprimer définitivement cette tâche ?'), () => {
                 tasks = tasks.filter(t => t.id !== id);
                 saveToLocalStorage();
                 renderTasks();
-                showToast('Tâche supprimée', 'error');
+                showToast(tr('Tâche supprimée'), 'error');
             });
         }
 
@@ -1054,9 +1614,9 @@
             const task = tasks.find(t => t.id === taskId);
             if (task) {
                 pomodoroActiveTaskId = taskId;
-                document.getElementById('pomo-task-title').innerText = `Tâche: ${task.title}`;
-                togglePomodoroWidget();
-                showToast(`Minuteur lié à "${task.title}"`);
+                document.getElementById('pomo-task-title').textContent = `${tr('Task')}: ${task.title}`;
+                document.getElementById('pomodoro-widget').classList.remove('hidden');
+                showToast(`${tr('Minuteur lié à')} "${task.title}"`);
             }
         }
 
@@ -1070,12 +1630,54 @@
                 updatePomodoroDisplay();
 
                 if (pomodoroSeconds <= 0) {
-                    clearInterval(pomodoroTimer);
-                    pomodoroRunning = false;
-                    showToast('Pomodoro terminé ! Prenez une pause.', 'success');
-                    resetPomodoro();
+                    completePomodoro();
                 }
             }, 1000);
+        }
+
+        function completePomodoro() {
+            clearInterval(pomodoroTimer);
+            pomodoroRunning = false;
+            const completedAt = new Date().toISOString();
+            pomodoroSessions.push({
+                id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                taskId: pomodoroActiveTaskId,
+                durationSeconds: 25 * 60,
+                completedAt
+            });
+            saveToLocalStorage();
+            renderTasks();
+            showToast(tr('Pomodoro terminé ! Prenez une pause.'), 'success');
+            if (settings.notifications && 'Notification' in window && Notification.permission === 'granted') {
+                const task = tasks.find(item => item.id === pomodoroActiveTaskId);
+                try {
+                    new Notification('TaskFlow', { body: task ? `${tr('Pomodoro complete for')} ${task.title}` : tr('Pomodoro terminé ! Prenez une pause.') });
+                } catch (error) {
+                    showToast(tr('Pomodoro terminé ! Prenez une pause.'), 'success');
+                }
+            }
+            if (settings.sound) playCompletionSound();
+            resetPomodoro();
+        }
+
+        function playCompletionSound() {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                const context = new AudioContextClass();
+                const oscillator = context.createOscillator();
+                const gain = context.createGain();
+                oscillator.frequency.value = 880;
+                gain.gain.setValueAtTime(0.12, context.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.6);
+                oscillator.connect(gain);
+                gain.connect(context.destination);
+                oscillator.start();
+                oscillator.stop(context.currentTime + 0.6);
+                oscillator.onended = () => context.close();
+            } catch (error) {
+                return;
+            }
         }
 
         function pausePomodoro() {
@@ -1100,7 +1702,9 @@
         function toggleStatsModal(forceOpen) {
             const modal = document.getElementById('stats-modal');
             if (forceOpen === false) {
+                const wasOpen = !modal.classList.contains('hidden');
                 modal.classList.add('hidden');
+                if (wasOpen) document.getElementById('stats-trigger').focus();
                 return;
             }
 
@@ -1108,42 +1712,82 @@
             const completed = tasks.filter(t => t.status === 'done').length;
             const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
             const totalDuration = tasks.reduce((acc, t) => acc + (t.duration || 0), 0);
+            const actualSeconds = pomodoroSessions.reduce((totalSeconds, session) => totalSeconds + session.durationSeconds, 0);
 
             document.getElementById('stat-completion-rate').innerText = `${rate}%`;
             document.getElementById('stat-total-time').innerText = `${Math.round(totalDuration / 60)}h`;
-            document.getElementById('stat-progress-text').innerText = `${completed} / ${total} Tâches`;
+            document.getElementById('stat-actual-time').innerText = formatTrackedDuration(actualSeconds);
+            document.getElementById('stat-progress-text').innerText = `${completed} / ${total} ${tr('Tâches')}`;
             document.getElementById('stat-progress-bar').style.width = `${rate}%`;
 
             modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) modal.querySelector('button').focus();
         }
 
         /* Quick Search Engine */
         function openSearchModal() {
-            document.getElementById('search-modal').classList.remove('hidden');
+            const modal = document.getElementById('search-modal');
+            modal.classList.remove('hidden');
             document.getElementById('search-input').focus();
         }
 
         function closeSearchModal() {
-            document.getElementById('search-modal').classList.add('hidden');
+            const modal = document.getElementById('search-modal');
+            if (!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                document.getElementById('search-trigger').focus();
+            }
         }
 
         function handleSearch(query) {
             const container = document.getElementById('search-results');
+            searchResultIndex = -1;
             if (!query.trim()) {
                 container.innerHTML = '';
+                document.getElementById('search-input').setAttribute('aria-expanded', 'false');
+                document.getElementById('search-input').removeAttribute('aria-activedescendant');
                 return;
             }
 
-            const matches = tasks.filter(t => t.title.toLowerCase().includes(query.toLowerCase()) || (t.description && t.description.toLowerCase().includes(query.toLowerCase())));
-            container.innerHTML = matches.map(t => `
-                <div onclick="openTaskModal('${t.id}'); closeSearchModal();" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-indigo-500/10 cursor-pointer transition flex justify-between items-center text-xs">
+            const normalizedQuery = query.toLocaleLowerCase(activeLanguage === 'fr' ? 'fr-FR' : 'en-US');
+            const matches = tasks.filter(task => {
+                const status = { todo: tr('À Faire'), in_progress: tr('En cours'), done: tr('Terminé') }[task.status];
+                const priority = tr(({ high: 'Haute', medium: 'Moyenne', low: 'Basse' })[task.priority] || task.priority);
+                const searchable = [task.title, task.description, task.category, tr(task.category), task.priority, priority, status, ...(task.subtasks || []).map(subtask => subtask.title)];
+                return searchable.some(value => String(value || '').toLocaleLowerCase(activeLanguage === 'fr' ? 'fr-FR' : 'en-US').includes(normalizedQuery));
+            });
+            window.searchResults = matches;
+            container.innerHTML = matches.map((task, index) => `
+                <button id="search-result-${index}" type="button" role="option" aria-selected="false" onclick="openSearchResult(${index})" class="w-full text-left p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-indigo-500/10 cursor-pointer transition flex justify-between items-center text-xs">
                     <div>
-                        <div class="font-semibold text-slate-800 dark:text-slate-100">${t.title}</div>
-                        <div class="text-[10px] text-slate-400">${t.category} • ${t.status}</div>
+                        <div class="font-semibold text-slate-800 dark:text-slate-100">${escapeHTML(task.title)}</div>
+                        <div class="text-[10px] text-slate-400">${escapeHTML(task.category)} • ${escapeHTML(({ todo: tr('À Faire'), in_progress: tr('En cours'), done: tr('Terminé') })[task.status])}</div>
                     </div>
                     <i class="fa-solid fa-chevron-right text-slate-400"></i>
-                </div>
+                </button>
             `).join('');
+            if (!matches.length) container.innerHTML = `<p class="p-3 text-xs text-slate-500">${escapeHTML(tr('No matching tasks'))}</p>`;
+            document.getElementById('search-input').setAttribute('aria-expanded', String(matches.length > 0));
+        }
+
+        function moveSearchSelection(direction) {
+            const results = document.querySelectorAll('#search-results [role="option"]');
+            if (!results.length) return;
+            searchResultIndex = (searchResultIndex + direction + results.length) % results.length;
+            results.forEach((result, index) => {
+                const selected = index === searchResultIndex;
+                result.setAttribute('aria-selected', String(selected));
+                result.classList.toggle('bg-indigo-500/10', selected);
+            });
+            document.getElementById('search-input').setAttribute('aria-activedescendant', `search-result-${searchResultIndex}`);
+            results[searchResultIndex].scrollIntoView({ block: 'nearest' });
+        }
+
+        function openSearchResult(index) {
+            const task = (window.searchResults || [])[index];
+            if (!task) return;
+            closeSearchModal();
+            openTaskModal(task.id);
         }
 
         /* Theme Toggle Handler */
@@ -1167,35 +1811,179 @@
             document.getElementById('data-menu').classList.toggle('hidden');
         }
 
+        function normalizeImportedTasks(value) {
+            if (!Array.isArray(value) || value.length > 10000) return null;
+            const ids = new Set();
+            const normalized = [];
+            for (const [index, task] of value.entries()) {
+                if (!task || typeof task !== 'object' || Array.isArray(task)) return null;
+                const id = String(task.id ?? '');
+                if (!/^[\w-]{1,100}$/.test(id) || ids.has(id)) return null;
+                if (typeof task.title !== 'string' || !task.title.trim() || task.title.length > 500) return null;
+                if (task.status != null && !['todo', 'in_progress', 'done'].includes(task.status)) return null;
+                if (task.priority != null && !['low', 'medium', 'high'].includes(task.priority)) return null;
+                if (task.recurrence != null && !['none', 'daily', 'weekly', 'monthly'].includes(task.recurrence)) return null;
+                const status = ['todo', 'in_progress', 'done'].includes(task.status) ? task.status : 'todo';
+                const priority = ['low', 'medium', 'high'].includes(task.priority) ? task.priority : 'medium';
+                const recurrence = ['none', 'daily', 'weekly', 'monthly'].includes(task.recurrence) ? task.recurrence : 'none';
+                const dueDate = task.dueDate == null ? '' : String(task.dueDate);
+                if (dueDate && (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || Number.isNaN(new Date(`${dueDate}T00:00:00Z`).getTime()) || new Date(`${dueDate}T00:00:00Z`).toISOString().slice(0, 10) !== dueDate)) return null;
+                if (task.description != null && (typeof task.description !== 'string' || task.description.length > 10000)) return null;
+                if (task.category != null && (typeof task.category !== 'string' || !task.category.trim() || task.category.length > 60)) return null;
+                if (task.duration != null && (!Number.isFinite(Number(task.duration)) || Number(task.duration) < 0 || Number(task.duration) > 100000)) return null;
+                const subtasks = task.subtasks == null ? [] : task.subtasks;
+                if (!Array.isArray(subtasks) || subtasks.length > 500) return null;
+                const subtaskIds = new Set();
+                const normalizedSubtasks = [];
+                for (const [subtaskIndex, subtask] of subtasks.entries()) {
+                    if (!subtask || typeof subtask.title !== 'string' || !subtask.title.trim() || subtask.title.length > 500) return null;
+                    if (subtask.completed != null && typeof subtask.completed !== 'boolean') return null;
+                    const subtaskId = String(subtask.id ?? `sub_${index}_${subtaskIndex}`);
+                    if (!/^[\w-]{1,100}$/.test(subtaskId) || subtaskIds.has(subtaskId)) return null;
+                    subtaskIds.add(subtaskId);
+                    normalizedSubtasks.push({ id: subtaskId, title: subtask.title, completed: subtask.completed === true });
+                }
+                ids.add(id);
+                normalized.push({
+                    ...task,
+                    id,
+                    title: task.title.trim(),
+                    description: task.description || '',
+                    status,
+                    priority,
+                    category: task.category || categories[0] || 'General',
+                    color: /^#[0-9a-f]{6}$/i.test(task.color || '') ? task.color : '#6366f1',
+                    dueDate,
+                    duration: Number(task.duration) || 30,
+                    recurrence,
+                    subtasks: normalizedSubtasks
+                });
+            }
+            return normalized;
+        }
+
+        function normalizeSessionHistory(value) {
+            if (!Array.isArray(value)) return [];
+            const ids = new Set();
+            return value.filter(session => {
+                if (!session || typeof session.id !== 'string' || !/^[\w-]{1,100}$/.test(session.id) || ids.has(session.id)) return false;
+                if (!Number.isInteger(session.durationSeconds) || session.durationSeconds < 1 || session.durationSeconds > 3600) return false;
+                if (typeof session.completedAt !== 'string' || Number.isNaN(Date.parse(session.completedAt))) return false;
+                if (session.taskId != null && !/^[\w-]{1,100}$/.test(String(session.taskId))) return false;
+                ids.add(session.id);
+                return true;
+            }).map(session => ({
+                id: session.id,
+                taskId: session.taskId == null ? null : String(session.taskId),
+                durationSeconds: session.durationSeconds,
+                completedAt: session.completedAt
+            }));
+        }
+
+        function normalizeImportedSettings(value) {
+            if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+            if (value.language != null && !['system', 'en', 'fr'].includes(value.language)) return null;
+            if (value.theme != null && !['system', 'light', 'dark', 'taskmaster'].includes(value.theme)) return null;
+            if (value.notifications != null && typeof value.notifications !== 'boolean') return null;
+            if (value.sound != null && typeof value.sound !== 'boolean') return null;
+            return {
+                language: ['system', 'en', 'fr'].includes(value.language) ? value.language : 'system',
+                theme: ['system', 'light', 'dark', 'taskmaster'].includes(value.theme) ? value.theme : 'system',
+                notifications: value.notifications === true,
+                sound: value.sound === true
+            };
+        }
+
+        function validateImportPayload(value) {
+            const isLegacy = Array.isArray(value);
+            if (!isLegacy && (!value || typeof value !== 'object' || value.version !== 2 || !Array.isArray(value.tasks))) return null;
+            const importedTasks = normalizeImportedTasks(isLegacy ? value : value.tasks);
+            if (!importedTasks) return null;
+            const importedCategories = isLegacy || value.categories == null
+                ? [...new Set(importedTasks.map(task => task.category))]
+                : value.categories;
+            if (!Array.isArray(importedCategories) || importedCategories.length > 100 || importedCategories.some(category => typeof category !== 'string' || !category.trim() || category.length > 60)) return null;
+            const importedSettings = !isLegacy && value.settings != null ? normalizeImportedSettings(value.settings) : null;
+            if (!isLegacy && value.settings != null && !importedSettings) return null;
+            const rawSessions = isLegacy || value.pomodoroSessions == null ? null : value.pomodoroSessions;
+            if (rawSessions !== null && (!Array.isArray(rawSessions) || rawSessions.length > 100000)) return null;
+            const sessions = rawSessions === null ? null : normalizeSessionHistory(rawSessions);
+            if (rawSessions !== null && sessions.length !== rawSessions.length) return null;
+            const normalizedCategories = [...new Set(importedCategories)];
+            if (!normalizedCategories.length) normalizedCategories.push('Travail', 'Dev', 'Design', 'Personnel');
+            return { tasks: importedTasks, categories: normalizedCategories, settings: importedSettings, pomodoroSessions: sessions };
+        }
+
         function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks, null, 2));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `taskmaster_backup_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(dlAnchorElem);
-            dlAnchorElem.click();
-            dlAnchorElem.remove();
-            showToast('Données exportées au format JSON', 'success');
+            const backup = { version: 2, exportedAt: new Date().toISOString(), tasks, categories, settings, pomodoroSessions };
+            const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `taskflow_backup_${localDateString()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            showToast(tr('Backup exported as JSON'), 'success');
         }
 
         function importData(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
             const fileReader = new FileReader();
-            fileReader.onload = function(e) {
+            fileReader.onload = function(loadEvent) {
                 try {
-                    const importedTasks = JSON.parse(e.target.result);
-                    if (Array.isArray(importedTasks)) {
-                        tasks = importedTasks;
-                        saveToLocalStorage();
-                        renderTasks();
-                        showToast('Données importées avec succès', 'success');
-                    } else {
-                        showToast('Format JSON invalide', 'error');
-                    }
+                    const payload = validateImportPayload(JSON.parse(loadEvent.target.result));
+                    if (!payload) throw new Error('invalid backup');
+                    pendingImport = payload;
+                    const importModal = document.getElementById('import-modal');
+                    importModal.classList.remove('hidden');
+                    importModal.querySelector('button').focus();
                 } catch (err) {
-                    showToast('Erreur lors de la lecture du fichier', 'error');
+                    showToast(tr('Import contains invalid task data'), 'error');
+                    event.target.value = '';
                 }
             };
-            fileReader.readAsText(event.target.files[0]);
+            fileReader.onerror = () => showToast(tr('Erreur lors de la lecture du fichier'), 'error');
+            fileReader.readAsText(file);
+        }
+
+        function applyImport(mode) {
+            if (!pendingImport || !['replace', 'merge'].includes(mode)) return;
+            let nextTasks = pendingImport.tasks;
+            let nextCategories = pendingImport.categories;
+            let nextSettings = pendingImport.settings || settings;
+            let nextSessions = pendingImport.pomodoroSessions || pomodoroSessions;
+            if (mode === 'merge') {
+                const existingIds = new Set(tasks.map(task => task.id));
+                nextTasks = [...tasks, ...pendingImport.tasks.filter(task => !existingIds.has(task.id))];
+                nextCategories = [...new Set([...categories, ...pendingImport.categories])];
+                const existingSessionIds = new Set(pomodoroSessions.map(session => session.id));
+                nextSessions = [...pomodoroSessions, ...(pendingImport.pomodoroSessions || []).filter(session => !existingSessionIds.has(session.id))];
+                nextSettings = settings;
+            }
+            const nextState = { tasks: nextTasks, categories: nextCategories, settings: nextSettings, pomodoroSessions: nextSessions };
+            if (!persistState(nextState)) return;
+            tasks = nextTasks;
+            categories = nextCategories;
+            settings = nextSettings;
+            pomodoroSessions = nextSessions;
+            pendingImport = null;
+            document.getElementById('import-modal').classList.add('hidden');
+            document.getElementById('import-file').value = '';
+            applySettings();
+            renderCustomFilterSelects();
+            renderCustomModalSelects();
+            renderTasks();
+            showToast(tr('Backup imported'), 'success');
+        }
+
+        function cancelImport() {
+            pendingImport = null;
+            const modal = document.getElementById('import-modal');
+            if (modal) modal.classList.add('hidden');
+            const fileInput = document.getElementById('import-file');
+            if (fileInput) fileInput.value = '';
         }
     </script>
 </body>
