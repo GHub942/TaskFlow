@@ -8,6 +8,7 @@ Please report:
 
 - Any way the page could be made to execute untrusted script or inject content beyond its own inline code (e.g. via a crafted URL or hash value).
 - Any unexpected external resource. The page currently loads Tailwind CSS, Font Awesome, and the Inter font from third-party CDNs; those resources can observe ordinary network metadata such as the request IP address.
+- Any service-worker cache behavior that serves stale or unexpected application resources. Offline caching is enabled only on localhost or HTTPS and stores the app shell plus the listed CDN assets in browser-managed caches.
 - Any factual error presented as a security claim (for example, a service described as end-to-end encrypted when it is not) — these affect real decisions people make about their privacy and safety.
 
 **Not in scope:**

@@ -18,3 +18,9 @@ jobs:
       - name: Check inline JavaScript syntax
         run: |
           node -e "const fs = require('fs'); const html = fs.readFileSync('index.html', 'utf8'); const scripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)]; if (scripts.length < 2) throw new Error('Application script not found'); new Function(scripts.at(-1)[1]); console.log('Inline JavaScript syntax OK');"
+      - name: Check shared and service-worker JavaScript
+        run: |
+          node --check taskflow-core.js
+          node --check service-worker.js
+      - name: Run core behavior tests
+        run: node --test tests/*.test.js

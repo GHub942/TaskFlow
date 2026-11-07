@@ -1,6 +1,6 @@
 # Contributing to TaskFlow
 
-Thanks for considering a contribution. This project is a single static HTML page, so most changes are simple text or data edits.
+Thanks for considering a contribution. TaskFlow is a static browser app with no package manager or backend; UI changes primarily live in `index.html`, tested rules in `taskflow-core.js`, and offline caching in `service-worker.js`.
 
 ## Ways to help
 
@@ -16,6 +16,7 @@ Thanks for considering a contribution. This project is a single static HTML page
 2. **Keep entries balanced.** Don't turn documentation into marketing copy, for or against any feature or approach.
 3. **Update both languages.** If you change English copy that has a French equivalent (or vice versa), update both, or flag in your PR that a translation update is still needed.
 4. **Test in a browser.** Open `index.html` directly and check settings, both languages, all themes, Kanban movement, Pomodoro completion, statistics, search, and import/export on desktop and mobile layouts.
+5. **Run automated tests.** Use `node --test tests/*.test.js`; the suite uses Node's built-in runner and needs no package install.
 
 ## Adding a new feature
 
@@ -48,7 +49,8 @@ Be respectful and assume good faith. Disagreements about feature priority or imp
 
 ## No build process
 
-This project has no npm, webpack, or compilation. Changes are made directly to `index.html`. To test:
+This project has no npm, webpack, or compilation. UI changes are made directly to `index.html`; shared logic and offline caching are in local JavaScript files. To test:
 1. Save your changes
 2. Open `index.html` in multiple browsers
 3. Verify nothing broke in existing features and confirm there are no console errors
+4. Run `node --test tests/*.test.js`

@@ -12,3 +12,10 @@
 - [x] Expand task search and add keyboard result navigation.
 - [x] Add accessible task movement controls and keyboard support.
 - [x] Verify desktop/mobile behavior, data migration, import/export, and settings.
+- [x] Add automated tests for backup validation, merge behavior, recurrence dates, and due-date filters.
+- [x] Configure Pomodoro work/break lengths and persist the running timer across reloads.
+- [x] Add category creation, rename, and deletion controls.
+- [x] Preview import counts and ID conflicts before applying backups.
+- [x] Cache the app shell and runtime CDN assets for offline use on localhost/HTTPS.
+- [x] Improve checkbox/select styling and add notification/sound test actions.
+- [x] Keep tooltip text inside the viewport on narrow screens and at screen edges.

@@ -32,7 +32,69 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            user-select: none;
+        }
+
+        select {
+            min-height: 40px;
+            padding-right: 2.5rem !important;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%2364758b' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            cursor: pointer;
+        }
+        select:focus-visible,
+        input[type="number"]:focus-visible,
+        input[type="text"]:focus-visible,
+        input[type="checkbox"]:focus-visible {
+            outline: 3px solid rgba(99, 102, 241, 0.45);
+            outline-offset: 2px;
+        }
+        select option {
+            color: #0f172a;
+            background: #ffffff;
+        }
+        .dark select option {
+            color: #f1f5f9;
+            background: #1e293b;
+        }
+        input[type="checkbox"] {
+            appearance: none;
+            display: inline-grid;
+            flex: 0 0 auto;
+            place-content: center;
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            border: 1.5px solid #64748b;
+            border-radius: 5px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: background-color 120ms ease, border-color 120ms ease;
+        }
+        input[type="checkbox"]::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background: #ffffff;
+            clip-path: polygon(14% 44%, 0 59%, 39% 100%, 100% 20%, 84% 6%, 37% 68%);
+            transform: scale(0);
+            transition: transform 120ms ease;
+        }
+        input[type="checkbox"]:checked {
+            border-color: #4f46e5;
+            background: #4f46e5;
+        }
+        input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+        .dark input[type="checkbox"]:not(:checked) {
+            border-color: #94a3b8;
+            background: #1e293b;
+        }
+        label:has(> input[type="checkbox"]) {
+            min-height: 40px;
+            cursor: pointer;
         }
 
         /* Custom Scrollbar */
@@ -88,21 +150,30 @@
         [data-tooltip] {
             position: relative;
         }
-        [data-tooltip]:hover::after {
+        [data-tooltip]:hover::after,
+        [data-tooltip]:focus-visible::after,
+        [data-tooltip][data-tooltip-placement]::after {
             content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%) translateY(-6px);
+            position: fixed;
+            top: var(--tooltip-top, 0px);
+            left: var(--tooltip-left, 50vw);
+            bottom: auto;
+            transform: translate(-50%, -100%);
             padding: 4px 10px;
             background: #0f172a;
             color: #ffffff;
             font-size: 11px;
             border-radius: 6px;
-            white-space: nowrap;
+            width: max-content;
+            max-width: calc(100vw - 16px);
+            white-space: normal;
+            text-align: center;
             pointer-events: none;
             z-index: 50;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        [data-tooltip][data-tooltip-placement="bottom"]::after {
+            transform: translate(-50%, 0);
         }
 
         /* Drag and Drop Styling */
@@ -113,6 +184,14 @@
         .drag-over {
             border: 2px dashed #6366f1 !important;
             background-color: rgba(99, 102, 241, 0.05);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
@@ -302,7 +381,11 @@
         </div>
 
         <div class="text-center py-2">
-            <div id="pomo-mode-label" class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Session Travail</div>
+            <div role="group" aria-label="Pomodoro mode" class="flex justify-center gap-1 mb-2">
+                <button id="pomo-work-mode" type="button" onclick="setPomodoroMode('work')" aria-pressed="true" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-indigo-600 text-white">Work</button>
+                <button id="pomo-break-mode" type="button" onclick="setPomodoroMode('break')" aria-pressed="false" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-slate-200 dark:bg-slate-800">Break</button>
+            </div>
+            <div id="pomo-mode-label" class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Work session</div>
             <div id="pomo-timer-display" class="text-4xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400 tracking-wider">25:00</div>
             <div id="pomo-task-title" class="text-xs text-slate-400 mt-2 truncate px-2">Aucune tâche liée</div>
         </div>
@@ -489,7 +572,7 @@
 
     <!-- Application Settings -->
     <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-heading" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-        <section class="glass-panel w-full max-w-md rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800">
+        <section class="glass-panel w-full max-w-md max-h-[85vh] overflow-y-auto rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800">
             <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-slate-800">
                 <h3 id="settings-heading" class="text-base font-bold">Settings</h3>
                 <button type="button" onclick="closeSettingsModal()" aria-label="Close settings" class="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
@@ -510,6 +593,14 @@
                         <option value="taskmaster">TaskMaster</option>
                     </select>
                 </label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="block text-xs font-semibold" for="pomodoro-work-setting">Work duration (minutes)
+                        <input id="pomodoro-work-setting" type="number" min="1" max="120" step="1" onchange="updateSetting('pomodoroWorkMinutes', Number(this.value))" class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-normal">
+                    </label>
+                    <label class="block text-xs font-semibold" for="pomodoro-break-setting">Break duration (minutes)
+                        <input id="pomodoro-break-setting" type="number" min="1" max="60" step="1" onchange="updateSetting('pomodoroBreakMinutes', Number(this.value))" class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-normal">
+                    </label>
+                </div>
                 <label class="flex items-center justify-between gap-3 text-sm">
                     <span>Browser notifications</span>
                     <input id="notifications-setting" type="checkbox" onchange="updateSetting('notifications', this.checked)" class="h-4 w-4 accent-indigo-600">
@@ -518,6 +609,18 @@
                     <span>Sound alert</span>
                     <input id="sound-setting" type="checkbox" onchange="updateSetting('sound', this.checked)" class="h-4 w-4 accent-indigo-600">
                 </label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="testBrowserNotification()" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Test notification</button>
+                    <button type="button" onclick="testSoundAlert()" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Test sound</button>
+                </div>
+                <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+                    <h4 class="text-xs font-semibold mb-2">Categories</h4>
+                    <div id="category-manager" class="space-y-2 max-h-40 overflow-y-auto mb-3"></div>
+                    <div class="flex gap-2">
+                        <input id="new-category-input" type="text" maxlength="60" placeholder="New category" aria-label="New category" class="min-w-0 flex-1 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+                        <button type="button" onclick="addCategory()" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Add</button>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
@@ -527,10 +630,11 @@
         <section class="glass-panel w-full max-w-sm rounded-xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800">
             <h3 id="import-heading" class="text-base font-bold mb-2">Import backup</h3>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Choose how to apply the selected backup.</p>
+            <div id="import-preview" class="rounded-lg bg-slate-100 dark:bg-slate-800/70 p-3 mb-4 text-xs leading-relaxed" aria-live="polite"></div>
             <div class="flex flex-wrap justify-end gap-2">
                 <button type="button" onclick="cancelImport()" class="px-3 py-2 rounded-lg text-xs bg-slate-200 dark:bg-slate-800">Cancel</button>
                 <button type="button" onclick="applyImport('merge')" class="px-3 py-2 rounded-lg text-xs bg-emerald-600 text-white">Merge</button>
-                <button type="button" onclick="applyImport('replace')" class="px-3 py-2 rounded-lg text-xs bg-rose-600 text-white">Replace</button>
+                <button type="button" onclick="confirmImportReplace()" class="px-3 py-2 rounded-lg text-xs bg-rose-600 text-white">Replace</button>
             </div>
         </section>
     </div>
@@ -559,6 +663,7 @@
         <!-- Toast messages are dynamically injected here -->
     </div>
 
+    <script src="taskflow-core.js"></script>
     <script>
         const englishText = {
             'Kanban & Productivité Custom': 'Kanban & Custom Productivity',
@@ -637,6 +742,12 @@
             'Tâche mise à jour avec succès': 'Task updated',
             'Nouvelle tâche créée': 'Task created',
             'Filtres réinitialisés': 'Filters reset',
+            'Catégorie ajoutée': 'Category added',
+            'Catégorie mise à jour': 'Category updated',
+            'Catégorie supprimée': 'Category deleted',
+            'Catégorie invalide': 'Invalid category',
+            'Cette catégorie existe déjà': 'Category already exists',
+            'Impossible de supprimer la dernière catégorie': 'Cannot delete the last category',
             'Format JSON invalide': 'Invalid backup format',
             'Erreur lors de la lecture du fichier': 'Could not read the selected file',
             'Données locales invalides': 'Stored task data is invalid',
@@ -700,7 +811,41 @@
             'Pomodoro complete for': 'Pomodoro terminé pour',
             'Stored task data is invalid': 'Données locales invalides',
             'Remove subtask': 'Supprimer la sous-tâche',
-            'Select task color': 'Choisir la couleur de la tâche'
+            'Select task color': 'Choisir la couleur de la tâche',
+            'Work duration (minutes)': 'Durée de travail (minutes)',
+            'Break duration (minutes)': 'Durée de pause (minutes)',
+            'Test notification': 'Tester la notification',
+            'Test sound': 'Tester le son',
+            'Categories': 'Catégories',
+            'New category': 'Nouvelle catégorie',
+            'Add': 'Ajouter',
+            'Rename category': 'Renommer la catégorie',
+            'Save category': 'Enregistrer la catégorie',
+            'Delete category': 'Supprimer la catégorie',
+            'Category added': 'Catégorie ajoutée',
+            'Category updated': 'Catégorie mise à jour',
+            'Category deleted': 'Catégorie supprimée',
+            'Invalid category': 'Catégorie invalide',
+            'Category already exists': 'Cette catégorie existe déjà',
+            'Cannot delete the last category': 'Impossible de supprimer la dernière catégorie',
+            'Test notification sent': 'Notification de test envoyée',
+            'Test sound played': 'Son de test joué',
+            'Notifications are not supported by this browser': 'Ce navigateur ne prend pas en charge les notifications',
+            'Sound alerts are not supported by this browser': 'Ce navigateur ne prend pas en charge les alertes sonores',
+            'Pomodoro mode': 'Mode Pomodoro',
+            'Work': 'Travail',
+            'Break': 'Pause',
+            'Work session': 'Session de travail',
+            'Break session': 'Session de pause',
+            'Break complete. Ready to focus?': 'Pause terminée. Prêt à vous reconcentrer ?',
+            'Offline support could not be enabled': 'Le mode hors ligne n’a pas pu être activé',
+            'Tasks in backup': 'Tâches dans la sauvegarde',
+            'New tasks': 'Nouvelles tâches',
+            'Existing ID conflicts': 'Conflits d’identifiants',
+            'Replace keeps imported tasks': 'Remplacer conservera les tâches importées',
+            'Replace current tasks?': 'Remplacer les tâches actuelles ?',
+            'Replace backup confirmation': 'Cette action remplacera toutes les tâches actuelles.',
+            'tasks will remain': 'tâches seront conservées'
         };
 
         function readStoredJSON(key, fallback) {
@@ -721,7 +866,7 @@
             }
         }
 
-        let settings = { language: 'system', theme: readLegacyTheme(), notifications: false, sound: false, ...readStoredJSON('taskmaster_settings', {}) };
+        let settings = { language: 'system', theme: readLegacyTheme(), notifications: false, sound: false, pomodoroWorkMinutes: 25, pomodoroBreakMinutes: 5, ...readStoredJSON('taskmaster_settings', {}) };
         let activeLanguage = 'en';
 
         function detectedLanguage() {
@@ -816,10 +961,14 @@
 
         // Pomodoro State
         let pomodoroTimer = null;
-        let pomodoroSeconds = 25 * 60;
+        const storedPomodoroState = readStoredJSON('taskmaster_timer', {});
+        const savedPomodoroState = storedPomodoroState && typeof storedPomodoroState === 'object' && !Array.isArray(storedPomodoroState) ? storedPomodoroState : {};
+        let pomodoroMode = savedPomodoroState.mode === 'break' ? 'break' : 'work';
+        let pomodoroSeconds = Number.isInteger(savedPomodoroState.remainingSeconds) ? savedPomodoroState.remainingSeconds : settings.pomodoroWorkMinutes * 60;
+        let pomodoroEndTime = Number.isFinite(savedPomodoroState.endTime) ? savedPomodoroState.endTime : null;
+        let pomodoroCompletedCycles = Number.isInteger(savedPomodoroState.completedCycles) ? savedPomodoroState.completedCycles : 0;
         let pomodoroRunning = false;
         let pomodoroActiveTaskId = null;
-        let pomodoroStartedAt = null;
         let pendingImport = null;
         let searchResultIndex = -1;
 
@@ -841,6 +990,8 @@
             });
             window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', refreshSystemSettingLabels);
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshSystemSettingLabels);
+            restorePomodoroTimer();
+            registerOfflineSupport();
 
             document.addEventListener('keydown', (e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -898,7 +1049,41 @@
                     if (dpPopup) dpPopup.classList.add('hidden');
                 }
             });
+
+            document.addEventListener('pointerover', e => {
+                const tooltipTarget = e.target.closest && e.target.closest('[data-tooltip]');
+                if (tooltipTarget) positionTooltip(tooltipTarget);
+            });
+            document.addEventListener('focusin', e => {
+                const tooltipTarget = e.target.closest && e.target.closest('[data-tooltip]');
+                if (tooltipTarget) positionTooltip(tooltipTarget);
+            });
+            const clearTooltip = e => {
+                const tooltipTarget = e.target.closest && e.target.closest('[data-tooltip]');
+                if (!tooltipTarget || tooltipTarget.contains(e.relatedTarget) || tooltipTarget === document.activeElement) return;
+                tooltipTarget.removeAttribute('data-tooltip-placement');
+                tooltipTarget.style.removeProperty('--tooltip-left');
+                tooltipTarget.style.removeProperty('--tooltip-top');
+            };
+            document.addEventListener('pointerout', clearTooltip);
+            document.addEventListener('focusout', clearTooltip);
+            window.addEventListener('resize', () => {
+                document.querySelectorAll('[data-tooltip-placement]').forEach(positionTooltip);
+            });
         };
+
+        function positionTooltip(element) {
+            element.setAttribute('data-tooltip-placement', 'top');
+            const tooltip = getComputedStyle(element, '::after');
+            const width = Math.min(parseFloat(tooltip.width) || 140, window.innerWidth - 16);
+            const height = Math.min(parseFloat(tooltip.height) || 30, window.innerHeight - 16);
+            const trigger = element.getBoundingClientRect();
+            const left = Math.max(width / 2 + 8, Math.min(window.innerWidth - width / 2 - 8, trigger.left + trigger.width / 2));
+            const placeBelow = trigger.top < height + 16 && trigger.bottom + height + 16 <= window.innerHeight;
+            element.dataset.tooltipPlacement = placeBelow ? 'bottom' : 'top';
+            element.style.setProperty('--tooltip-left', `${left}px`);
+            element.style.setProperty('--tooltip-top', `${placeBelow ? trigger.bottom + 8 : Math.max(height + 8, trigger.top - 8)}px`);
+        }
 
         /* Local Storage Helper */
         function persistState(next = { tasks, categories, settings, pomodoroSessions }) {
@@ -906,7 +1091,8 @@
                 taskmaster_tasks: next.tasks,
                 taskmaster_categories: next.categories,
                 taskmaster_settings: next.settings,
-                taskmaster_sessions: next.pomodoroSessions
+                taskmaster_sessions: next.pomodoroSessions,
+                taskmaster_timer: getPomodoroState()
             };
             const previous = {};
             try {
@@ -929,6 +1115,44 @@
 
         function saveToLocalStorage() {
             return persistState();
+        }
+
+        function getPomodoroState() {
+            return {
+                mode: pomodoroMode,
+                remainingSeconds: pomodoroSeconds,
+                endTime: pomodoroEndTime,
+                running: pomodoroRunning,
+                completedCycles: pomodoroCompletedCycles,
+                taskId: pomodoroActiveTaskId
+            };
+        }
+
+        function restorePomodoroTimer() {
+            const state = savedPomodoroState;
+            if (state.taskId != null && tasks.some(task => task.id === state.taskId)) {
+                pomodoroActiveTaskId = state.taskId;
+                const task = tasks.find(item => item.id === state.taskId);
+                document.getElementById('pomo-task-title').textContent = `${tr('Task')}: ${task.title}`;
+            }
+            pomodoroSeconds = Math.max(0, Math.min(120 * 60, Number(pomodoroSeconds) || 0));
+            updatePomodoroDisplay();
+            if (state.running === true && Number.isFinite(pomodoroEndTime)) {
+                pomodoroRunning = true;
+                pomodoroSeconds = Math.max(0, Math.ceil((pomodoroEndTime - Date.now()) / 1000));
+                document.getElementById('pomo-start-btn').classList.add('opacity-50');
+                if (pomodoroSeconds === 0) completePomodoro();
+                else pomodoroTimer = setInterval(tickPomodoro, 250);
+            }
+            updatePomodoroDisplay();
+        }
+
+        function registerOfflineSupport() {
+            const isSecureOrigin = location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+            if (!isSecureOrigin || !('serviceWorker' in navigator)) return;
+            navigator.serviceWorker.register('./service-worker.js').catch(() => {
+                showToast(tr('Offline support could not be enabled'), 'error');
+            });
         }
 
         function applyTheme() {
@@ -956,6 +1180,8 @@
             settings.theme = ['system', 'light', 'dark', 'taskmaster'].includes(settings.theme) ? settings.theme : 'system';
             settings.notifications = settings.notifications === true;
             settings.sound = settings.sound === true;
+            settings.pomodoroWorkMinutes = Number.isInteger(settings.pomodoroWorkMinutes) ? Math.min(120, Math.max(1, settings.pomodoroWorkMinutes)) : 25;
+            settings.pomodoroBreakMinutes = Number.isInteger(settings.pomodoroBreakMinutes) ? Math.min(60, Math.max(1, settings.pomodoroBreakMinutes)) : 5;
             activeLanguage = settings.language === 'system' ? detectedLanguage() : settings.language;
             applyTheme();
             translateStaticUI();
@@ -968,11 +1194,17 @@
             const soundToggle = document.getElementById('sound-setting');
             if (notificationToggle) notificationToggle.checked = settings.notifications;
             if (soundToggle) soundToggle.checked = settings.sound;
+            const workDurationInput = document.getElementById('pomodoro-work-setting');
+            const breakDurationInput = document.getElementById('pomodoro-break-setting');
+            if (workDurationInput) workDurationInput.value = settings.pomodoroWorkMinutes;
+            if (breakDurationInput) breakDurationInput.value = settings.pomodoroBreakMinutes;
             const searchShortcut = document.querySelector('#search-trigger kbd');
             if (searchShortcut) searchShortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl+K';
         }
 
         function updateSetting(key, value) {
+            if (key === 'pomodoroWorkMinutes') value = Math.min(120, Math.max(1, Number(value) || 25));
+            if (key === 'pomodoroBreakMinutes') value = Math.min(60, Math.max(1, Number(value) || 5));
             if (key === 'notifications' && value && !('Notification' in window)) {
                 settings.notifications = false;
                 applySettings();
@@ -989,7 +1221,11 @@
                 return;
             }
             settings[key] = value;
+            if (!pomodoroRunning && key === 'pomodoroWorkMinutes' && pomodoroMode === 'work') pomodoroSeconds = value * 60;
+            if (!pomodoroRunning && key === 'pomodoroBreakMinutes' && pomodoroMode === 'break') pomodoroSeconds = value * 60;
             applySettings();
+            if (!pomodoroRunning && (key === 'pomodoroWorkMinutes' || key === 'pomodoroBreakMinutes')) updatePomodoroDisplay();
+            renderCategoryManager();
             renderCustomFilterSelects();
             renderCustomModalSelects();
             renderDueFilterButtons();
@@ -999,6 +1235,7 @@
 
         function openSettingsModal() {
             applySettings();
+            renderCategoryManager();
             const modal = document.getElementById('settings-modal');
             modal.classList.remove('hidden');
             modal.querySelector('select').focus();
@@ -1010,6 +1247,80 @@
                 modal.classList.add('hidden');
                 document.getElementById('settings-trigger').focus();
             }
+        }
+
+        function renderCategoryManager() {
+            const container = document.getElementById('category-manager');
+            if (!container) return;
+            container.innerHTML = categories.map((category, index) => `
+                <div class="flex items-center gap-2">
+                    <label class="sr-only" for="managed-category-${index}">${escapeHTML(tr('Rename category'))}</label>
+                    <input id="managed-category-${index}" maxlength="60" value="${escapeHTML(category)}" class="min-w-0 flex-1 px-2.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
+                    <button type="button" onclick="renameCategory(${index})" aria-label="${escapeHTML(tr('Save category'))}" class="p-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-emerald-500/10"><i class="fa-solid fa-check"></i></button>
+                    <button type="button" onclick="deleteCategory(${index})" aria-label="${escapeHTML(tr('Delete category'))}" class="p-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-rose-500/10"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function addCategory() {
+            const input = document.getElementById('new-category-input');
+            const category = input.value.trim();
+            if (!category || category.length > 60) return;
+            if (categories.some(existing => existing.toLocaleLowerCase() === category.toLocaleLowerCase())) {
+                showToast(tr('Category already exists'), 'error');
+                return;
+            }
+            if (categories.length >= 100) return;
+            categories.push(category);
+            input.value = '';
+            saveToLocalStorage();
+            renderCategoryManager();
+            renderCustomFilterSelects();
+            renderCustomModalSelects();
+            showToast(tr('Category added'), 'success');
+        }
+
+        function renameCategory(index) {
+            const input = document.getElementById(`managed-category-${index}`);
+            const nextName = input.value.trim();
+            const previousName = categories[index];
+            if (!nextName || nextName.length > 60) {
+                showToast(tr('Invalid category'), 'error');
+                return;
+            }
+            if (categories.some((category, categoryIndex) => categoryIndex !== index && category.toLocaleLowerCase() === nextName.toLocaleLowerCase())) {
+                showToast(tr('Category already exists'), 'error');
+                return;
+            }
+            categories[index] = nextName;
+            tasks.forEach(task => { if (task.category === previousName) task.category = nextName; });
+            if (activeFilters.category === previousName) activeFilters.category = nextName;
+            if (modalFormValues.category === previousName) modalFormValues.category = nextName;
+            saveToLocalStorage();
+            renderCategoryManager();
+            renderCustomFilterSelects();
+            renderCustomModalSelects();
+            renderTasks();
+            showToast(tr('Category updated'), 'success');
+        }
+
+        function deleteCategory(index) {
+            if (categories.length <= 1) {
+                showToast(tr('Cannot delete the last category'), 'error');
+                return;
+            }
+            const removedCategory = categories[index];
+            const fallbackCategory = categories[index === 0 ? 1 : 0];
+            categories.splice(index, 1);
+            tasks.forEach(task => { if (task.category === removedCategory) task.category = fallbackCategory; });
+            if (activeFilters.category === removedCategory) activeFilters.category = 'all';
+            if (modalFormValues.category === removedCategory) modalFormValues.category = fallbackCategory;
+            saveToLocalStorage();
+            renderCategoryManager();
+            renderCustomFilterSelects();
+            renderCustomModalSelects();
+            renderTasks();
+            showToast(tr('Category deleted'), 'success');
         }
 
         /* Toast Notification System */
@@ -1276,15 +1587,7 @@
         }
 
         function matchesDueFilter(task, filter) {
-            if (filter === 'all' || task.status === 'done' || !task.dueDate) return filter === 'all';
-            const today = localDateString();
-            if (filter === 'overdue') return task.dueDate < today;
-            if (filter === 'upcoming') {
-                const limit = new Date(`${today}T00:00:00`);
-                limit.setDate(limit.getDate() + 7);
-                return task.dueDate >= today && task.dueDate <= localDateString(limit);
-            }
-            return true;
+            return TaskFlowCore.matchesDueFilter(task.dueDate, task.status, filter, localDateString());
         }
 
         function formatDueDate(value) {
@@ -1428,18 +1731,7 @@
         }
 
         function incrementDueDate(value, recurrence) {
-            const date = new Date(`${value}T00:00:00Z`);
-            if (Number.isNaN(date.getTime())) return localDateString();
-            if (recurrence === 'daily') date.setUTCDate(date.getUTCDate() + 1);
-            if (recurrence === 'weekly') date.setUTCDate(date.getUTCDate() + 7);
-            if (recurrence === 'monthly') {
-                const day = date.getUTCDate();
-                date.setUTCDate(1);
-                date.setUTCMonth(date.getUTCMonth() + 1);
-                const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
-                date.setUTCDate(Math.min(day, lastDay));
-            }
-            return date.toISOString().slice(0, 10);
+            return TaskFlowCore.nextDueDate(value, recurrence, localDateString());
         }
 
         function createNextRecurringTask(task) {
@@ -1616,38 +1908,61 @@
                 pomodoroActiveTaskId = taskId;
                 document.getElementById('pomo-task-title').textContent = `${tr('Task')}: ${task.title}`;
                 document.getElementById('pomodoro-widget').classList.remove('hidden');
+                saveToLocalStorage();
                 showToast(`${tr('Minuteur lié à')} "${task.title}"`);
             }
         }
 
         function startPomodoro() {
             if (pomodoroRunning) return;
+            if (pomodoroSeconds <= 0) pomodoroSeconds = pomodoroDurationSeconds();
             pomodoroRunning = true;
+            pomodoroEndTime = Date.now() + pomodoroSeconds * 1000;
             document.getElementById('pomo-start-btn').classList.add('opacity-50');
+            saveToLocalStorage();
+            pomodoroTimer = setInterval(tickPomodoro, 250);
+        }
 
-            pomodoroTimer = setInterval(() => {
-                pomodoroSeconds--;
-                updatePomodoroDisplay();
+        function pomodoroDurationSeconds(mode = pomodoroMode) {
+            return (mode === 'work' ? settings.pomodoroWorkMinutes : settings.pomodoroBreakMinutes) * 60;
+        }
 
-                if (pomodoroSeconds <= 0) {
-                    completePomodoro();
-                }
-            }, 1000);
+        function tickPomodoro() {
+            if (!pomodoroRunning || !Number.isFinite(pomodoroEndTime)) return;
+            pomodoroSeconds = Math.max(0, Math.ceil((pomodoroEndTime - Date.now()) / 1000));
+            updatePomodoroDisplay();
+            if (pomodoroSeconds === 0) completePomodoro();
+        }
+
+        function setPomodoroMode(mode) {
+            if (!['work', 'break'].includes(mode)) return;
+            if (pomodoroRunning) pausePomodoro();
+            pomodoroMode = mode;
+            pomodoroSeconds = pomodoroDurationSeconds();
+            updatePomodoroDisplay();
+            saveToLocalStorage();
         }
 
         function completePomodoro() {
             clearInterval(pomodoroTimer);
             pomodoroRunning = false;
-            const completedAt = new Date().toISOString();
-            pomodoroSessions.push({
-                id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-                taskId: pomodoroActiveTaskId,
-                durationSeconds: 25 * 60,
-                completedAt
-            });
+            pomodoroEndTime = null;
+            const completedMode = pomodoroMode;
+            if (completedMode === 'work') {
+                pomodoroSessions.push({
+                    id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                    taskId: pomodoroActiveTaskId,
+                    durationSeconds: pomodoroDurationSeconds('work'),
+                    completedAt: new Date().toISOString()
+                });
+                pomodoroCompletedCycles++;
+            }
+            pomodoroMode = completedMode === 'work' ? 'break' : 'work';
+            pomodoroSeconds = pomodoroDurationSeconds();
+            updatePomodoroDisplay();
             saveToLocalStorage();
             renderTasks();
-            showToast(tr('Pomodoro terminé ! Prenez une pause.'), 'success');
+            showToast(completedMode === 'work' ? tr('Pomodoro terminé ! Prenez une pause.') : tr('Break complete. Ready to focus?'), 'success');
             if (settings.notifications && 'Notification' in window && Notification.permission === 'granted') {
                 const task = tasks.find(item => item.id === pomodoroActiveTaskId);
                 try {
@@ -1657,13 +1972,12 @@
                 }
             }
             if (settings.sound) playCompletionSound();
-            resetPomodoro();
         }
 
         function playCompletionSound() {
             try {
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContextClass) return;
+                if (!AudioContextClass) return false;
                 const context = new AudioContextClass();
                 const oscillator = context.createOscillator();
                 const gain = context.createGain();
@@ -1675,27 +1989,71 @@
                 oscillator.start();
                 oscillator.stop(context.currentTime + 0.6);
                 oscillator.onended = () => context.close();
+                return true;
             } catch (error) {
-                return;
+                return false;
             }
         }
 
+        async function testBrowserNotification() {
+            if (!('Notification' in window)) {
+                showToast(tr('Notifications are not supported by this browser'), 'error');
+                return;
+            }
+            try {
+                const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+                if (permission !== 'granted') throw new Error('notification permission denied');
+                new Notification('TaskFlow', { body: tr('Test notification sent') });
+                showToast(tr('Test notification sent'), 'success');
+            } catch (error) {
+                showToast(tr('Notifications are blocked by the browser'), 'error');
+            }
+        }
+
+        function testSoundAlert() {
+            if (!playCompletionSound()) {
+                showToast(tr('Sound alerts are not supported by this browser'), 'error');
+                return;
+            }
+            showToast(tr('Test sound played'), 'success');
+        }
+
         function pausePomodoro() {
+            if (pomodoroRunning && Number.isFinite(pomodoroEndTime)) {
+                pomodoroSeconds = Math.max(0, Math.ceil((pomodoroEndTime - Date.now()) / 1000));
+                if (pomodoroSeconds === 0) {
+                    completePomodoro();
+                    return;
+                }
+            }
             clearInterval(pomodoroTimer);
             pomodoroRunning = false;
+            pomodoroEndTime = null;
             document.getElementById('pomo-start-btn').classList.remove('opacity-50');
+            saveToLocalStorage();
         }
 
         function resetPomodoro() {
-            pausePomodoro();
-            pomodoroSeconds = 25 * 60;
+            clearInterval(pomodoroTimer);
+            pomodoroRunning = false;
+            pomodoroEndTime = null;
+            pomodoroSeconds = pomodoroDurationSeconds();
+            document.getElementById('pomo-start-btn').classList.remove('opacity-50');
             updatePomodoroDisplay();
+            saveToLocalStorage();
         }
 
         function updatePomodoroDisplay() {
             const m = Math.floor(pomodoroSeconds / 60).toString().padStart(2, '0');
             const s = (pomodoroSeconds % 60).toString().padStart(2, '0');
             document.getElementById('pomo-timer-display').innerText = `${m}:${s}`;
+            document.getElementById('pomo-mode-label').textContent = tr(pomodoroMode === 'work' ? 'Work session' : 'Break session');
+            const workButton = document.getElementById('pomo-work-mode');
+            const breakButton = document.getElementById('pomo-break-mode');
+            workButton.setAttribute('aria-pressed', String(pomodoroMode === 'work'));
+            breakButton.setAttribute('aria-pressed', String(pomodoroMode === 'break'));
+            workButton.className = `px-2.5 py-1 rounded-lg text-[10px] font-semibold ${pomodoroMode === 'work' ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}`;
+            breakButton.className = `px-2.5 py-1 rounded-lg text-[10px] font-semibold ${pomodoroMode === 'break' ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}`;
         }
 
         /* Productivity Statistics Modal */
@@ -1812,106 +2170,19 @@
         }
 
         function normalizeImportedTasks(value) {
-            if (!Array.isArray(value) || value.length > 10000) return null;
-            const ids = new Set();
-            const normalized = [];
-            for (const [index, task] of value.entries()) {
-                if (!task || typeof task !== 'object' || Array.isArray(task)) return null;
-                const id = String(task.id ?? '');
-                if (!/^[\w-]{1,100}$/.test(id) || ids.has(id)) return null;
-                if (typeof task.title !== 'string' || !task.title.trim() || task.title.length > 500) return null;
-                if (task.status != null && !['todo', 'in_progress', 'done'].includes(task.status)) return null;
-                if (task.priority != null && !['low', 'medium', 'high'].includes(task.priority)) return null;
-                if (task.recurrence != null && !['none', 'daily', 'weekly', 'monthly'].includes(task.recurrence)) return null;
-                const status = ['todo', 'in_progress', 'done'].includes(task.status) ? task.status : 'todo';
-                const priority = ['low', 'medium', 'high'].includes(task.priority) ? task.priority : 'medium';
-                const recurrence = ['none', 'daily', 'weekly', 'monthly'].includes(task.recurrence) ? task.recurrence : 'none';
-                const dueDate = task.dueDate == null ? '' : String(task.dueDate);
-                if (dueDate && (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || Number.isNaN(new Date(`${dueDate}T00:00:00Z`).getTime()) || new Date(`${dueDate}T00:00:00Z`).toISOString().slice(0, 10) !== dueDate)) return null;
-                if (task.description != null && (typeof task.description !== 'string' || task.description.length > 10000)) return null;
-                if (task.category != null && (typeof task.category !== 'string' || !task.category.trim() || task.category.length > 60)) return null;
-                if (task.duration != null && (!Number.isFinite(Number(task.duration)) || Number(task.duration) < 0 || Number(task.duration) > 100000)) return null;
-                const subtasks = task.subtasks == null ? [] : task.subtasks;
-                if (!Array.isArray(subtasks) || subtasks.length > 500) return null;
-                const subtaskIds = new Set();
-                const normalizedSubtasks = [];
-                for (const [subtaskIndex, subtask] of subtasks.entries()) {
-                    if (!subtask || typeof subtask.title !== 'string' || !subtask.title.trim() || subtask.title.length > 500) return null;
-                    if (subtask.completed != null && typeof subtask.completed !== 'boolean') return null;
-                    const subtaskId = String(subtask.id ?? `sub_${index}_${subtaskIndex}`);
-                    if (!/^[\w-]{1,100}$/.test(subtaskId) || subtaskIds.has(subtaskId)) return null;
-                    subtaskIds.add(subtaskId);
-                    normalizedSubtasks.push({ id: subtaskId, title: subtask.title, completed: subtask.completed === true });
-                }
-                ids.add(id);
-                normalized.push({
-                    ...task,
-                    id,
-                    title: task.title.trim(),
-                    description: task.description || '',
-                    status,
-                    priority,
-                    category: task.category || categories[0] || 'General',
-                    color: /^#[0-9a-f]{6}$/i.test(task.color || '') ? task.color : '#6366f1',
-                    dueDate,
-                    duration: Number(task.duration) || 30,
-                    recurrence,
-                    subtasks: normalizedSubtasks
-                });
-            }
-            return normalized;
+            return TaskFlowCore.normalizeImportedTasks(value, categories);
         }
 
         function normalizeSessionHistory(value) {
-            if (!Array.isArray(value)) return [];
-            const ids = new Set();
-            return value.filter(session => {
-                if (!session || typeof session.id !== 'string' || !/^[\w-]{1,100}$/.test(session.id) || ids.has(session.id)) return false;
-                if (!Number.isInteger(session.durationSeconds) || session.durationSeconds < 1 || session.durationSeconds > 3600) return false;
-                if (typeof session.completedAt !== 'string' || Number.isNaN(Date.parse(session.completedAt))) return false;
-                if (session.taskId != null && !/^[\w-]{1,100}$/.test(String(session.taskId))) return false;
-                ids.add(session.id);
-                return true;
-            }).map(session => ({
-                id: session.id,
-                taskId: session.taskId == null ? null : String(session.taskId),
-                durationSeconds: session.durationSeconds,
-                completedAt: session.completedAt
-            }));
+            return TaskFlowCore.normalizeSessionHistory(value);
         }
 
         function normalizeImportedSettings(value) {
-            if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-            if (value.language != null && !['system', 'en', 'fr'].includes(value.language)) return null;
-            if (value.theme != null && !['system', 'light', 'dark', 'taskmaster'].includes(value.theme)) return null;
-            if (value.notifications != null && typeof value.notifications !== 'boolean') return null;
-            if (value.sound != null && typeof value.sound !== 'boolean') return null;
-            return {
-                language: ['system', 'en', 'fr'].includes(value.language) ? value.language : 'system',
-                theme: ['system', 'light', 'dark', 'taskmaster'].includes(value.theme) ? value.theme : 'system',
-                notifications: value.notifications === true,
-                sound: value.sound === true
-            };
+            return TaskFlowCore.normalizeImportedSettings(value);
         }
 
         function validateImportPayload(value) {
-            const isLegacy = Array.isArray(value);
-            if (!isLegacy && (!value || typeof value !== 'object' || value.version !== 2 || !Array.isArray(value.tasks))) return null;
-            const importedTasks = normalizeImportedTasks(isLegacy ? value : value.tasks);
-            if (!importedTasks) return null;
-            const importedCategories = isLegacy || value.categories == null
-                ? [...new Set(importedTasks.map(task => task.category))]
-                : value.categories;
-            if (!Array.isArray(importedCategories) || importedCategories.length > 100 || importedCategories.some(category => typeof category !== 'string' || !category.trim() || category.length > 60)) return null;
-            const importedSettings = !isLegacy && value.settings != null ? normalizeImportedSettings(value.settings) : null;
-            if (!isLegacy && value.settings != null && !importedSettings) return null;
-            const rawSessions = isLegacy || value.pomodoroSessions == null ? null : value.pomodoroSessions;
-            if (rawSessions !== null && (!Array.isArray(rawSessions) || rawSessions.length > 100000)) return null;
-            const sessions = rawSessions === null ? null : normalizeSessionHistory(rawSessions);
-            if (rawSessions !== null && sessions.length !== rawSessions.length) return null;
-            const normalizedCategories = [...new Set(importedCategories)];
-            if (!normalizedCategories.length) normalizedCategories.push('Travail', 'Dev', 'Design', 'Personnel');
-            return { tasks: importedTasks, categories: normalizedCategories, settings: importedSettings, pomodoroSessions: sessions };
+            return TaskFlowCore.validateImportPayload(value, categories);
         }
 
         function exportData() {
@@ -1936,6 +2207,8 @@
                     const payload = validateImportPayload(JSON.parse(loadEvent.target.result));
                     if (!payload) throw new Error('invalid backup');
                     pendingImport = payload;
+                    const preview = TaskFlowCore.buildImportPreview(tasks, payload.tasks);
+                    document.getElementById('import-preview').textContent = `${tr('Tasks in backup')}: ${preview.incomingCount} | ${tr('New tasks')}: ${preview.newCount} | ${tr('Existing ID conflicts')}: ${preview.conflictCount}. ${tr('Replace keeps imported tasks')}: ${preview.replaceCount}.`;
                     const importModal = document.getElementById('import-modal');
                     importModal.classList.remove('hidden');
                     importModal.querySelector('button').focus();
@@ -1955,8 +2228,7 @@
             let nextSettings = pendingImport.settings || settings;
             let nextSessions = pendingImport.pomodoroSessions || pomodoroSessions;
             if (mode === 'merge') {
-                const existingIds = new Set(tasks.map(task => task.id));
-                nextTasks = [...tasks, ...pendingImport.tasks.filter(task => !existingIds.has(task.id))];
+                nextTasks = TaskFlowCore.mergeTasks(tasks, pendingImport.tasks);
                 nextCategories = [...new Set([...categories, ...pendingImport.categories])];
                 const existingSessionIds = new Set(pomodoroSessions.map(session => session.id));
                 nextSessions = [...pomodoroSessions, ...(pendingImport.pomodoroSessions || []).filter(session => !existingSessionIds.has(session.id))];
@@ -1972,16 +2244,31 @@
             document.getElementById('import-modal').classList.add('hidden');
             document.getElementById('import-file').value = '';
             applySettings();
+            if (!pomodoroRunning) {
+                pomodoroSeconds = pomodoroDurationSeconds();
+                updatePomodoroDisplay();
+                saveToLocalStorage();
+            }
             renderCustomFilterSelects();
             renderCustomModalSelects();
+            renderCategoryManager();
             renderTasks();
             showToast(tr('Backup imported'), 'success');
+        }
+
+        function confirmImportReplace() {
+            if (!pendingImport) return;
+            const preview = TaskFlowCore.buildImportPreview(tasks, pendingImport.tasks);
+            const message = `${tr('Replace backup confirmation')} ${preview.replaceCount} ${tr('tasks will remain')}.`;
+            showCustomConfirm(tr('Replace current tasks?'), message, () => applyImport('replace'));
         }
 
         function cancelImport() {
             pendingImport = null;
             const modal = document.getElementById('import-modal');
             if (modal) modal.classList.add('hidden');
+            const preview = document.getElementById('import-preview');
+            if (preview) preview.textContent = '';
             const fileInput = document.getElementById('import-file');
             if (fileInput) fileInput.value = '';
         }
