@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Reorganize settings into tabs with independent task-data and preference retention controls.
+- Replace number spinners with custom duration steppers and add Start/Pause/Resume Pomodoro controls.
+- Make the Pomodoro widget draggable and restore its position when task data is saved.
+- Fix tooltip dismissal after pointer/focus leaves and keep tooltips viewport-clamped.
 - Add dependency-free automated tests and CI checks for core behavior and offline caching.
 - Add managed categories, configurable resumable Pomodoro timers, and import previews.
 - Add explicit notification and sound tests, accessible form controls, and viewport-clamped tooltips.

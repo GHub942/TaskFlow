@@ -19,10 +19,13 @@ The interface supports English (US) and French (France), with system-language de
 
 - Language: `System (Detected_language)`, `English (US)`, or `Français (FR)`
 - Theme: `System (Detected_theme)`, `Light`, `Dark`, or `TaskMaster`
+- `Save task data` stores tasks, categories, and completed sessions; disabling it clears that data on the next reload
+- `Save preferences` stores language, theme, timer defaults, and alert choices; disabling it restores defaults on reload while keeping saved task data
 - `Ctrl+K` / `Cmd+K`: open search; use the arrow keys and Enter to open a result
 - `Ctrl+N` / `Cmd+N`: create a task; `Esc` closes the active dialog
 - Browser notifications require permission; sound alerts are separately optional
 - Settings include explicit test actions for browser notifications and sound
+- The Pomodoro widget supports work/break modes, duration controls, one dynamic Start/Pause/Resume button, and dragging on desktop
 
 JSON backups can replace current data or merge into it. The preview summarizes new tasks and ID conflicts before applying changes; during a merge, existing local tasks take precedence. Older task-array backups remain supported.
 

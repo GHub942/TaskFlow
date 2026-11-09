@@ -164,7 +164,22 @@
         return true;
     }
 
+    function buildStorageEntries(policy, state, timer) {
+        const saveData = policy.saveData !== false;
+        const savePreferences = policy.savePreferences !== false;
+        return {
+            taskmaster_tasks: saveData ? state.tasks : null,
+            taskmaster_categories: saveData ? state.categories : null,
+            taskmaster_sessions: saveData ? state.pomodoroSessions : null,
+            taskmaster_timer: saveData ? timer : null,
+            taskmaster_settings: savePreferences ? state.settings : null,
+            theme: null,
+            taskmaster_storage: saveData || savePreferences ? { saveData, savePreferences } : null
+        };
+    }
+
     return {
+        buildStorageEntries,
         buildImportPreview,
         localDateString,
         matchesDueFilter,

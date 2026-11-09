@@ -54,9 +54,17 @@
             color: #0f172a;
             background: #ffffff;
         }
+        select option:checked {
+            color: #ffffff;
+            background: #4f46e5;
+        }
         .dark select option {
             color: #f1f5f9;
             background: #1e293b;
+        }
+        .dark select option:checked {
+            color: #ffffff;
+            background: #4338ca;
         }
         input[type="checkbox"] {
             appearance: none;
@@ -151,8 +159,7 @@
             position: relative;
         }
         [data-tooltip]:hover::after,
-        [data-tooltip]:focus-visible::after,
-        [data-tooltip][data-tooltip-placement]::after {
+        [data-tooltip]:focus-visible::after {
             content: attr(data-tooltip);
             position: fixed;
             top: var(--tooltip-top, 0px);
@@ -172,7 +179,8 @@
             z-index: 50;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
-        [data-tooltip][data-tooltip-placement="bottom"]::after {
+        [data-tooltip][data-tooltip-placement="bottom"]:hover::after,
+        [data-tooltip][data-tooltip-placement="bottom"]:focus-visible::after {
             transform: translate(-50%, 0);
         }
 
@@ -370,12 +378,12 @@
     </main>
 
     <!-- Floating Pomodoro Widget -->
-    <div id="pomodoro-widget" class="fixed bottom-6 right-6 z-40 hidden w-72 glass-panel rounded-2xl p-4 shadow-2xl border border-indigo-500/30 animate-fade-in">
-        <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-200 dark:border-slate-800">
+    <div id="pomodoro-widget" class="fixed bottom-6 right-6 z-40 hidden w-72 max-w-[calc(100vw-24px)] glass-panel rounded-2xl p-4 shadow-2xl border border-indigo-500/30 animate-fade-in">
+        <div id="pomodoro-drag-handle" onpointerdown="startPomodoroWidgetDrag(event)" onpointermove="movePomodoroWidgetDrag(event)" onpointerup="endPomodoroWidgetDrag(event)" onpointercancel="endPomodoroWidgetDrag(event)" class="flex items-center justify-between pb-2 mb-3 border-b border-slate-200 dark:border-slate-800 cursor-move select-none touch-none">
             <div class="flex items-center gap-2 text-indigo-500 font-semibold text-xs">
                 <i class="fa-solid fa-clock"></i> Pomodoro Timer
             </div>
-            <button onclick="togglePomodoroWidget()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+            <button type="button" aria-label="Close Pomodoro timer" onclick="togglePomodoroWidget()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -386,18 +394,20 @@
                 <button id="pomo-break-mode" type="button" onclick="setPomodoroMode('break')" aria-pressed="false" class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-slate-200 dark:bg-slate-800">Break</button>
             </div>
             <div id="pomo-mode-label" class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Work session</div>
+            <div class="flex items-center justify-center gap-3 mb-1">
+                <button type="button" onclick="adjustPomodoroDuration(-1)" aria-label="Decrease current Pomodoro duration" class="w-9 h-9 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fa-solid fa-minus"></i></button>
+                <span id="pomo-duration-label" class="min-w-16 text-xs font-semibold text-slate-500">25 min</span>
+                <button type="button" onclick="adjustPomodoroDuration(1)" aria-label="Increase current Pomodoro duration" class="w-9 h-9 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fa-solid fa-plus"></i></button>
+            </div>
             <div id="pomo-timer-display" class="text-4xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400 tracking-wider">25:00</div>
             <div id="pomo-task-title" class="text-xs text-slate-400 mt-2 truncate px-2">Aucune tâche liée</div>
         </div>
 
         <div class="flex items-center justify-center gap-3 mt-4">
-            <button id="pomo-start-btn" onclick="startPomodoro()" class="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
-                <i class="fa-solid fa-play mr-1"></i> Démarrer
+            <button id="pomo-start-btn" onclick="togglePomodoro()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
+                <i class="fa-solid fa-play mr-1"></i><span id="pomo-start-label">Start</span>
             </button>
-            <button onclick="pausePomodoro()" class="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs transition">
-                <i class="fa-solid fa-pause"></i>
-            </button>
-            <button onclick="resetPomodoro()" class="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs transition">
+            <button type="button" onclick="resetPomodoro()" aria-label="Reset Pomodoro timer" class="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs transition">
                 <i class="fa-solid fa-rotate-left"></i>
             </button>
         </div>
@@ -577,7 +587,13 @@
                 <h3 id="settings-heading" class="text-base font-bold">Settings</h3>
                 <button type="button" onclick="closeSettingsModal()" aria-label="Close settings" class="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
+            <div role="tablist" aria-label="Settings sections" class="grid grid-cols-3 gap-1 p-1 mb-4 rounded-lg bg-slate-100 dark:bg-slate-800">
+                <button id="settings-tab-general" type="button" role="tab" aria-selected="true" aria-controls="settings-panel-general" onclick="showSettingsTab('general')" class="px-2 py-2 rounded-md text-xs font-semibold bg-white dark:bg-slate-700 shadow-sm">General</button>
+                <button id="settings-tab-pomodoro" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-pomodoro" onclick="showSettingsTab('pomodoro')" class="px-2 py-2 rounded-md text-xs font-semibold">Pomodoro</button>
+                <button id="settings-tab-data" type="button" role="tab" aria-selected="false" aria-controls="settings-panel-data" onclick="showSettingsTab('data')" class="px-2 py-2 rounded-md text-xs font-semibold">Data</button>
+            </div>
             <div class="space-y-4">
+                <div id="settings-panel-general" role="tabpanel" aria-labelledby="settings-tab-general" class="space-y-4">
                 <label class="block text-xs font-semibold" for="language-setting">Language
                     <select id="language-setting" onchange="updateSetting('language', this.value)" class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-normal">
                         <option value="system">System (Detected_language)</option>
@@ -593,12 +609,26 @@
                         <option value="taskmaster">TaskMaster</option>
                     </select>
                 </label>
+                <label class="flex items-center justify-between gap-3 text-sm">
+                    <span>Save preferences</span>
+                    <input id="save-preferences-setting" type="checkbox" onchange="updateSetting('savePreferences', this.checked)" class="h-4 w-4 accent-indigo-600">
+                </label>
+                </div>
+                <div id="settings-panel-pomodoro" role="tabpanel" aria-labelledby="settings-tab-pomodoro" class="hidden space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                     <label class="block text-xs font-semibold" for="pomodoro-work-setting">Work duration (minutes)
-                        <input id="pomodoro-work-setting" type="number" min="1" max="120" step="1" onchange="updateSetting('pomodoroWorkMinutes', Number(this.value))" class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-normal">
+                        <span class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+                            <button type="button" onclick="stepSettingDuration('pomodoroWorkMinutes', -1)" aria-label="Decrease work duration" class="w-10 h-10 shrink-0 rounded-l-lg hover:bg-slate-200 dark:hover:bg-slate-700"><i class="fa-solid fa-minus"></i></button>
+                            <input id="pomodoro-work-setting" type="text" inputmode="numeric" pattern="[0-9]*" onchange="updateSetting('pomodoroWorkMinutes', Number(this.value))" class="min-w-0 w-full bg-transparent border-0 text-center text-sm font-normal focus:outline-none">
+                            <button type="button" onclick="stepSettingDuration('pomodoroWorkMinutes', 1)" aria-label="Increase work duration" class="w-10 h-10 shrink-0 rounded-r-lg hover:bg-slate-200 dark:hover:bg-slate-700"><i class="fa-solid fa-plus"></i></button>
+                        </span>
                     </label>
                     <label class="block text-xs font-semibold" for="pomodoro-break-setting">Break duration (minutes)
-                        <input id="pomodoro-break-setting" type="number" min="1" max="60" step="1" onchange="updateSetting('pomodoroBreakMinutes', Number(this.value))" class="mt-1 w-full px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-normal">
+                        <span class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+                            <button type="button" onclick="stepSettingDuration('pomodoroBreakMinutes', -1)" aria-label="Decrease break duration" class="w-10 h-10 shrink-0 rounded-l-lg hover:bg-slate-200 dark:hover:bg-slate-700"><i class="fa-solid fa-minus"></i></button>
+                            <input id="pomodoro-break-setting" type="text" inputmode="numeric" pattern="[0-9]*" onchange="updateSetting('pomodoroBreakMinutes', Number(this.value))" class="min-w-0 w-full bg-transparent border-0 text-center text-sm font-normal focus:outline-none">
+                            <button type="button" onclick="stepSettingDuration('pomodoroBreakMinutes', 1)" aria-label="Increase break duration" class="w-10 h-10 shrink-0 rounded-r-lg hover:bg-slate-200 dark:hover:bg-slate-700"><i class="fa-solid fa-plus"></i></button>
+                        </span>
                     </label>
                 </div>
                 <label class="flex items-center justify-between gap-3 text-sm">
@@ -613,6 +643,12 @@
                     <button type="button" onclick="testBrowserNotification()" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Test notification</button>
                     <button type="button" onclick="testSoundAlert()" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Test sound</button>
                 </div>
+                </div>
+                <div id="settings-panel-data" role="tabpanel" aria-labelledby="settings-tab-data" class="hidden space-y-4">
+                <label class="flex items-center justify-between gap-3 text-sm">
+                    <span>Save task data</span>
+                    <input id="save-data-setting" type="checkbox" onchange="updateSetting('saveData', this.checked)" class="h-4 w-4 accent-indigo-600">
+                </label>
                 <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
                     <h4 class="text-xs font-semibold mb-2">Categories</h4>
                     <div id="category-manager" class="space-y-2 max-h-40 overflow-y-auto mb-3"></div>
@@ -620,6 +656,7 @@
                         <input id="new-category-input" type="text" maxlength="60" placeholder="New category" aria-label="New category" class="min-w-0 flex-1 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm">
                         <button type="button" onclick="addCategory()" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Add</button>
                     </div>
+                </div>
                 </div>
             </div>
         </section>
@@ -845,7 +882,26 @@
             'Replace keeps imported tasks': 'Remplacer conservera les tâches importées',
             'Replace current tasks?': 'Remplacer les tâches actuelles ?',
             'Replace backup confirmation': 'Cette action remplacera toutes les tâches actuelles.',
-            'tasks will remain': 'tâches seront conservées'
+            'tasks will remain': 'tâches seront conservées',
+            'Settings sections': 'Sections des paramètres',
+            'General': 'Général',
+            'Data': 'Données',
+            'Save preferences': 'Enregistrer les préférences',
+            'Save task data': 'Enregistrer les données',
+            'Storage enabled': 'Enregistrement activé',
+            'Storage disabled': 'Enregistrement désactivé',
+            'Decrease work duration': 'Diminuer la durée de travail',
+            'Increase work duration': 'Augmenter la durée de travail',
+            'Decrease break duration': 'Diminuer la durée de pause',
+            'Increase break duration': 'Augmenter la durée de pause',
+            'Decrease current Pomodoro duration': 'Diminuer la durée du Pomodoro',
+            'Increase current Pomodoro duration': 'Augmenter la durée du Pomodoro',
+            'Start': 'Démarrer',
+            'Resume': 'Reprendre',
+            'Reset Pomodoro timer': 'Réinitialiser le minuteur Pomodoro',
+            'Close Pomodoro timer': 'Fermer le minuteur Pomodoro',
+            'min': 'min',
+            'Pause': 'Pause'
         };
 
         function readStoredJSON(key, fallback) {
@@ -866,7 +922,13 @@
             }
         }
 
-        let settings = { language: 'system', theme: readLegacyTheme(), notifications: false, sound: false, pomodoroWorkMinutes: 25, pomodoroBreakMinutes: 5, ...readStoredJSON('taskmaster_settings', {}) };
+        const storedStorageOptions = readStoredJSON('taskmaster_storage', {});
+        let storageOptions = {
+            saveData: !storedStorageOptions || typeof storedStorageOptions !== 'object' || storedStorageOptions.saveData !== false,
+            savePreferences: !storedStorageOptions || typeof storedStorageOptions !== 'object' || storedStorageOptions.savePreferences !== false
+        };
+        const savedSettings = storageOptions.savePreferences ? readStoredJSON('taskmaster_settings', {}) : {};
+        let settings = { language: 'system', theme: storageOptions.savePreferences ? readLegacyTheme() : 'system', notifications: false, sound: false, pomodoroWorkMinutes: 25, pomodoroBreakMinutes: 5, ...savedSettings };
         let activeLanguage = 'en';
 
         function detectedLanguage() {
@@ -901,7 +963,7 @@
         }
 
         /* State Variables */
-        let tasks = readStoredJSON('taskmaster_tasks', null);
+        let tasks = storageOptions.saveData ? readStoredJSON('taskmaster_tasks', null) : null;
         if (!Array.isArray(tasks)) tasks = [
             {
                 id: '1',
@@ -937,11 +999,11 @@
             }
         ];
 
-        let categories = readStoredJSON('taskmaster_categories', null);
+        let categories = storageOptions.saveData ? readStoredJSON('taskmaster_categories', null) : null;
         if (!Array.isArray(categories) || !categories.every(category => typeof category === 'string')) categories = ['Travail', 'Dev', 'Design', 'Personnel'];
         categories = [...new Set(categories.filter(category => category.trim() && category.length <= 60))];
         if (!categories.length) categories = ['Travail', 'Dev', 'Design', 'Personnel'];
-        let pomodoroSessions = readStoredJSON('taskmaster_sessions', []);
+        let pomodoroSessions = storageOptions.saveData ? readStoredJSON('taskmaster_sessions', []) : [];
         if (!Array.isArray(pomodoroSessions)) pomodoroSessions = [];
         let storedTasksInvalid = false;
         if (Array.isArray(tasks)) {
@@ -961,14 +1023,20 @@
 
         // Pomodoro State
         let pomodoroTimer = null;
-        const storedPomodoroState = readStoredJSON('taskmaster_timer', {});
+        const storedPomodoroState = storageOptions.saveData ? readStoredJSON('taskmaster_timer', {}) : {};
         const savedPomodoroState = storedPomodoroState && typeof storedPomodoroState === 'object' && !Array.isArray(storedPomodoroState) ? storedPomodoroState : {};
         let pomodoroMode = savedPomodoroState.mode === 'break' ? 'break' : 'work';
         let pomodoroSeconds = Number.isInteger(savedPomodoroState.remainingSeconds) ? savedPomodoroState.remainingSeconds : settings.pomodoroWorkMinutes * 60;
         let pomodoroEndTime = Number.isFinite(savedPomodoroState.endTime) ? savedPomodoroState.endTime : null;
         let pomodoroCompletedCycles = Number.isInteger(savedPomodoroState.completedCycles) ? savedPomodoroState.completedCycles : 0;
         let pomodoroRunning = false;
+        let pomodoroHasStarted = savedPomodoroState.hasStarted === true || savedPomodoroState.running === true;
         let pomodoroActiveTaskId = null;
+        let pomodoroWidgetPosition = {
+            left: Number.isFinite(savedPomodoroState.widgetLeft) ? savedPomodoroState.widgetLeft : null,
+            top: Number.isFinite(savedPomodoroState.widgetTop) ? savedPomodoroState.widgetTop : null
+        };
+        let pomodoroDragState = null;
         let pendingImport = null;
         let searchResultIndex = -1;
 
@@ -1010,6 +1078,16 @@
                         e.preventDefault();
                         openSearchResult(searchResultIndex);
                     }
+                }
+                const activeSettingsTab = e.target.closest && e.target.closest('[role="tab"][id^="settings-tab-"]');
+                if (activeSettingsTab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                    e.preventDefault();
+                    const tabs = [...document.querySelectorAll('#settings-modal [role="tab"]')];
+                    const currentIndex = tabs.indexOf(activeSettingsTab);
+                    const nextIndex = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (currentIndex + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+                    const nextTab = tabs[nextIndex];
+                    showSettingsTab(nextTab.id.replace('settings-tab-', ''));
+                    nextTab.focus();
                 }
                 const activeModal = [...document.querySelectorAll('[role="dialog"]')].find(modal => !modal.classList.contains('hidden'));
                 if (e.key === 'Tab' && activeModal) {
@@ -1060,7 +1138,7 @@
             });
             const clearTooltip = e => {
                 const tooltipTarget = e.target.closest && e.target.closest('[data-tooltip]');
-                if (!tooltipTarget || tooltipTarget.contains(e.relatedTarget) || tooltipTarget === document.activeElement) return;
+                if (!tooltipTarget || tooltipTarget.contains(e.relatedTarget) || tooltipTarget.matches(':hover, :focus-visible')) return;
                 tooltipTarget.removeAttribute('data-tooltip-placement');
                 tooltipTarget.style.removeProperty('--tooltip-left');
                 tooltipTarget.style.removeProperty('--tooltip-top');
@@ -1087,17 +1165,14 @@
 
         /* Local Storage Helper */
         function persistState(next = { tasks, categories, settings, pomodoroSessions }) {
-            const entries = {
-                taskmaster_tasks: next.tasks,
-                taskmaster_categories: next.categories,
-                taskmaster_settings: next.settings,
-                taskmaster_sessions: next.pomodoroSessions,
-                taskmaster_timer: getPomodoroState()
-            };
+            const entries = TaskFlowCore.buildStorageEntries(storageOptions, next, getPomodoroState());
             const previous = {};
             try {
                 Object.keys(entries).forEach(key => { previous[key] = localStorage.getItem(key); });
-                Object.entries(entries).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+                Object.entries(entries).forEach(([key, value]) => {
+                    if (value === null) localStorage.removeItem(key);
+                    else localStorage.setItem(key, JSON.stringify(value));
+                });
                 return true;
             } catch (error) {
                 Object.entries(previous).forEach(([key, value]) => {
@@ -1123,8 +1198,11 @@
                 remainingSeconds: pomodoroSeconds,
                 endTime: pomodoroEndTime,
                 running: pomodoroRunning,
+                hasStarted: pomodoroHasStarted,
                 completedCycles: pomodoroCompletedCycles,
-                taskId: pomodoroActiveTaskId
+                taskId: pomodoroActiveTaskId,
+                widgetLeft: pomodoroWidgetPosition.left,
+                widgetTop: pomodoroWidgetPosition.top
             };
         }
 
@@ -1134,6 +1212,15 @@
                 pomodoroActiveTaskId = state.taskId;
                 const task = tasks.find(item => item.id === state.taskId);
                 document.getElementById('pomo-task-title').textContent = `${tr('Task')}: ${task.title}`;
+            }
+            const widget = document.getElementById('pomodoro-widget');
+            if (Number.isFinite(pomodoroWidgetPosition.left) && Number.isFinite(pomodoroWidgetPosition.top)) {
+                const widgetWidth = widget.offsetWidth || Math.min(288, window.innerWidth - 24);
+                const widgetHeight = widget.offsetHeight || Math.min(320, window.innerHeight - 24);
+                widget.style.left = `${Math.max(0, Math.min(window.innerWidth - widgetWidth, pomodoroWidgetPosition.left))}px`;
+                widget.style.top = `${Math.max(0, Math.min(window.innerHeight - widgetHeight, pomodoroWidgetPosition.top))}px`;
+                widget.style.right = 'auto';
+                widget.style.bottom = 'auto';
             }
             pomodoroSeconds = Math.max(0, Math.min(120 * 60, Number(pomodoroSeconds) || 0));
             updatePomodoroDisplay();
@@ -1198,11 +1285,27 @@
             const breakDurationInput = document.getElementById('pomodoro-break-setting');
             if (workDurationInput) workDurationInput.value = settings.pomodoroWorkMinutes;
             if (breakDurationInput) breakDurationInput.value = settings.pomodoroBreakMinutes;
+            const saveDataToggle = document.getElementById('save-data-setting');
+            const savePreferencesToggle = document.getElementById('save-preferences-setting');
+            if (saveDataToggle) saveDataToggle.checked = storageOptions.saveData;
+            if (savePreferencesToggle) savePreferencesToggle.checked = storageOptions.savePreferences;
             const searchShortcut = document.querySelector('#search-trigger kbd');
             if (searchShortcut) searchShortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl+K';
         }
 
         function updateSetting(key, value) {
+            if (key === 'saveData' || key === 'savePreferences') {
+                const previousOptions = { ...storageOptions };
+                storageOptions[key] = value === true;
+                if (!saveToLocalStorage()) {
+                    storageOptions = previousOptions;
+                    applySettings();
+                    return;
+                }
+                applySettings();
+                showToast(tr(storageOptions[key] ? 'Storage enabled' : 'Storage disabled'), 'success');
+                return;
+            }
             if (key === 'pomodoroWorkMinutes') value = Math.min(120, Math.max(1, Number(value) || 25));
             if (key === 'pomodoroBreakMinutes') value = Math.min(60, Math.max(1, Number(value) || 5));
             if (key === 'notifications' && value && !('Notification' in window)) {
@@ -1231,6 +1334,26 @@
             renderDueFilterButtons();
             renderTasks();
             saveToLocalStorage();
+        }
+
+        function stepSettingDuration(key, increment) {
+            const limits = key === 'pomodoroWorkMinutes' ? { min: 1, max: 120 } : { min: 1, max: 60 };
+            const nextValue = Math.max(limits.min, Math.min(limits.max, settings[key] + increment));
+            updateSetting(key, nextValue);
+        }
+
+        function showSettingsTab(tabName) {
+            const sections = ['general', 'pomodoro', 'data'];
+            if (!sections.includes(tabName)) return;
+            sections.forEach(section => {
+                const selected = section === tabName;
+                const tab = document.getElementById(`settings-tab-${section}`);
+                const panel = document.getElementById(`settings-panel-${section}`);
+                tab.setAttribute('aria-selected', String(selected));
+                tab.tabIndex = selected ? 0 : -1;
+                tab.className = `px-2 py-2 rounded-md text-xs font-semibold ${selected ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}`;
+                panel.classList.toggle('hidden', !selected);
+            });
         }
 
         function openSettingsModal() {
@@ -1902,6 +2025,40 @@
             widget.classList.toggle('hidden');
         }
 
+        function startPomodoroWidgetDrag(event) {
+            if (event.button !== 0 || event.target.closest('button')) return;
+            const widget = document.getElementById('pomodoro-widget');
+            const bounds = widget.getBoundingClientRect();
+            pomodoroDragState = {
+                pointerId: event.pointerId,
+                offsetX: event.clientX - bounds.left,
+                offsetY: event.clientY - bounds.top
+            };
+            widget.style.left = `${bounds.left}px`;
+            widget.style.top = `${bounds.top}px`;
+            widget.style.right = 'auto';
+            widget.style.bottom = 'auto';
+            event.currentTarget.setPointerCapture(event.pointerId);
+        }
+
+        function movePomodoroWidgetDrag(event) {
+            if (!pomodoroDragState || pomodoroDragState.pointerId !== event.pointerId) return;
+            const widget = document.getElementById('pomodoro-widget');
+            const maxLeft = Math.max(0, window.innerWidth - widget.offsetWidth);
+            const maxTop = Math.max(0, window.innerHeight - widget.offsetHeight);
+            const left = Math.max(0, Math.min(maxLeft, event.clientX - pomodoroDragState.offsetX));
+            const top = Math.max(0, Math.min(maxTop, event.clientY - pomodoroDragState.offsetY));
+            widget.style.left = `${left}px`;
+            widget.style.top = `${top}px`;
+            pomodoroWidgetPosition = { left, top };
+        }
+
+        function endPomodoroWidgetDrag(event) {
+            if (!pomodoroDragState || pomodoroDragState.pointerId !== event.pointerId) return;
+            pomodoroDragState = null;
+            saveToLocalStorage();
+        }
+
         function attachPomodoroToTask(taskId) {
             const task = tasks.find(t => t.id === taskId);
             if (task) {
@@ -1917,10 +2074,29 @@
             if (pomodoroRunning) return;
             if (pomodoroSeconds <= 0) pomodoroSeconds = pomodoroDurationSeconds();
             pomodoroRunning = true;
+            pomodoroHasStarted = true;
             pomodoroEndTime = Date.now() + pomodoroSeconds * 1000;
             document.getElementById('pomo-start-btn').classList.add('opacity-50');
+            updatePomodoroDisplay();
             saveToLocalStorage();
             pomodoroTimer = setInterval(tickPomodoro, 250);
+        }
+
+        function togglePomodoro() {
+            if (pomodoroRunning) pausePomodoro();
+            else startPomodoro();
+        }
+
+        function adjustPomodoroDuration(increment) {
+            const key = pomodoroMode === 'work' ? 'pomodoroWorkMinutes' : 'pomodoroBreakMinutes';
+            const maximum = pomodoroMode === 'work' ? 120 : 60;
+            const nextDuration = Math.max(1, Math.min(maximum, settings[key] + increment));
+            if (pomodoroRunning) {
+                pomodoroSeconds = Math.max(1, pomodoroSeconds + increment * 60);
+                pomodoroEndTime = Date.now() + pomodoroSeconds * 1000;
+            }
+            updateSetting(key, nextDuration);
+            updatePomodoroDisplay();
         }
 
         function pomodoroDurationSeconds(mode = pomodoroMode) {
@@ -1938,6 +2114,7 @@
             if (!['work', 'break'].includes(mode)) return;
             if (pomodoroRunning) pausePomodoro();
             pomodoroMode = mode;
+            pomodoroHasStarted = false;
             pomodoroSeconds = pomodoroDurationSeconds();
             updatePomodoroDisplay();
             saveToLocalStorage();
@@ -1947,6 +2124,7 @@
             clearInterval(pomodoroTimer);
             pomodoroRunning = false;
             pomodoroEndTime = null;
+            pomodoroHasStarted = false;
             const completedMode = pomodoroMode;
             if (completedMode === 'work') {
                 pomodoroSessions.push({
@@ -2028,14 +2206,17 @@
             }
             clearInterval(pomodoroTimer);
             pomodoroRunning = false;
+            pomodoroHasStarted = true;
             pomodoroEndTime = null;
             document.getElementById('pomo-start-btn').classList.remove('opacity-50');
+            updatePomodoroDisplay();
             saveToLocalStorage();
         }
 
         function resetPomodoro() {
             clearInterval(pomodoroTimer);
             pomodoroRunning = false;
+            pomodoroHasStarted = false;
             pomodoroEndTime = null;
             pomodoroSeconds = pomodoroDurationSeconds();
             document.getElementById('pomo-start-btn').classList.remove('opacity-50');
@@ -2054,6 +2235,12 @@
             breakButton.setAttribute('aria-pressed', String(pomodoroMode === 'break'));
             workButton.className = `px-2.5 py-1 rounded-lg text-[10px] font-semibold ${pomodoroMode === 'work' ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}`;
             breakButton.className = `px-2.5 py-1 rounded-lg text-[10px] font-semibold ${pomodoroMode === 'break' ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}`;
+            document.getElementById('pomo-duration-label').textContent = `${settings[pomodoroMode === 'work' ? 'pomodoroWorkMinutes' : 'pomodoroBreakMinutes']} ${tr('min')}`;
+            const startButton = document.getElementById('pomo-start-btn');
+            const buttonText = pomodoroRunning ? 'Pause' : pomodoroHasStarted ? 'Resume' : 'Start';
+            const buttonIcon = pomodoroRunning ? 'fa-pause' : 'fa-play';
+            startButton.innerHTML = `<i class="fa-solid ${buttonIcon} mr-1"></i><span id="pomo-start-label">${escapeHTML(tr(buttonText))}</span>`;
+            startButton.setAttribute('aria-label', tr(buttonText));
         }
 
         /* Productivity Statistics Modal */

@@ -19,3 +19,9 @@
 - [x] Cache the app shell and runtime CDN assets for offline use on localhost/HTTPS.
 - [x] Improve checkbox/select styling and add notification/sound test actions.
 - [x] Keep tooltip text inside the viewport on narrow screens and at screen edges.
+- [x] Reorganize settings into clear General, Pomodoro, and Data sections.
+- [x] Add independent data and preferences persistence controls.
+- [x] Replace numeric input spinners with custom duration steppers.
+- [x] Add dynamic Pomodoro Start/Pause/Resume and direct duration adjustment.
+- [x] Allow dragging the Pomodoro widget on desktop.
+- [x] Ensure tooltips hide after pointer/focus leaves, including after clicks.

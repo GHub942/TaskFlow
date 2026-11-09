@@ -61,3 +61,22 @@ test('matches overdue and upcoming tasks using inclusive local-date strings', ()
     assert.equal(core.matchesDueFilter('2026-11-15', 'todo', 'upcoming', '2026-11-07'), false);
     assert.equal(core.matchesDueFilter('2026-11-06', 'done', 'overdue', '2026-11-07'), false);
 });
+
+test('stores tasks independently from preferences', () => {
+    const state = { tasks: ['task'], categories: ['Work'], pomodoroSessions: ['session'], settings: { theme: 'dark' } };
+    const noTaskData = core.buildStorageEntries({ saveData: false, savePreferences: true }, state, { running: false });
+    assert.equal(noTaskData.taskmaster_tasks, null);
+    assert.equal(noTaskData.taskmaster_timer, null);
+    assert.deepEqual(noTaskData.taskmaster_settings, { theme: 'dark' });
+
+    const noPreferences = core.buildStorageEntries({ saveData: true, savePreferences: false }, state, { running: false });
+    assert.deepEqual(noPreferences.taskmaster_tasks, ['task']);
+    assert.equal(noPreferences.taskmaster_settings, null);
+    assert.equal(noPreferences.theme, null);
+    assert.deepEqual(noPreferences.taskmaster_storage, { saveData: true, savePreferences: false });
+
+    const noPersistence = core.buildStorageEntries({ saveData: false, savePreferences: false }, state, {});
+    assert.equal(noPersistence.taskmaster_storage, null);
+    assert.equal(noPersistence.taskmaster_settings, null);
+    assert.equal(noPersistence.theme, null);
+});
