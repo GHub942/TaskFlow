@@ -508,6 +508,10 @@
             "Données locales invalides": "Datos locales no válidos",
             "Données importées avec succès": "Datos importados correctamente",
             "Données exportées au format JSON": "Datos exportados en JSON",
+            'Exporter CSV': 'Exportar CSV',
+            'Exporter iCal': 'Exportar iCal',
+            'Importer': 'Importar',
+
         },
         it: {
             'Kanban & Productivité Custom': 'Kanban e produttività',
@@ -690,6 +694,10 @@
             "Données locales invalides": "Dati locali non validi",
             "Données importées avec succès": "Dati importati correttamente",
             "Données exportées au format JSON": "Dati esportati in JSON",
+            'Exporter CSV': 'Esporta CSV',
+            'Exporter iCal': 'Esporta iCal',
+            'Importer': 'Importa',
+
         },
         de: {
             'Kanban & Productivité Custom': 'Kanban & Produktivität',
@@ -872,6 +880,10 @@
             "Données locales invalides": "Ungültige lokale Daten",
             "Données importées avec succès": "Daten erfolgreich importiert",
             "Données exportées au format JSON": "Daten als JSON exportiert",
+            'Exporter CSV': 'CSV exportieren',
+            'Exporter iCal': 'iCal exportieren',
+            'Importer': 'Importieren',
+
         },
         'en-GB': {
             ...enText,
@@ -1025,6 +1037,10 @@
             "Données locales invalides": "Invalid local data",
             "Données importées avec succès": "Data imported successfully",
             "Données exportées au format JSON": "Data exported as JSON",
+            'Exporter CSV': 'Export CSV',
+            'Exporter iCal': 'Export iCal',
+            'Importer': 'Import',
+
         },
         ru: {
             'Kanban & Productivité Custom': 'Канбан и продуктивность',
@@ -1207,6 +1223,10 @@
             "Données locales invalides": "Недопустимые локальные данные",
             "Données importées avec succès": "Данные успешно импортированы",
             "Données exportées au format JSON": "Данные экспортированы в JSON",
+            'Exporter CSV': 'Экспорт CSV',
+            'Exporter iCal': 'Экспорт iCal',
+            'Importer': 'Импорт',
+
         },
         uk: {
             'Kanban & Productivité Custom': 'Канбан і продуктивність',
@@ -1389,6 +1409,10 @@
             "Données locales invalides": "Недійсні локальні дані",
             "Données importées avec succès": "Дані успішно імпортовано",
             "Données exportées au format JSON": "Дані експортовано в JSON",
+            'Exporter CSV': 'Експорт CSV',
+            'Exporter iCal': 'Експорт iCal',
+            'Importer': 'Імпорт',
+
         },
         zh: {
             'Kanban & Productivité Custom': '看板与效率',
@@ -1571,6 +1595,10 @@
             "Données locales invalides": "本地数据无效",
             "Données importées avec succès": "数据导入成功",
             "Données exportées au format JSON": "数据已导出为 JSON",
+            'Exporter CSV': '导出 CSV',
+            'Exporter iCal': '导出 iCal',
+            'Importer': '导入',
+
         },
         ko: {
             'Kanban & Productivité Custom': '칸반 & 생산성',
@@ -1753,6 +1781,10 @@
             "Données locales invalides": "잘못된 로컬 데이터",
             "Données importées avec succès": "데이터를 성공적으로 가져왔습니다",
             "Données exportées au format JSON": "데이터를 JSON으로 내보냈습니다",
+            'Exporter CSV': 'CSV 내보내기',
+            'Exporter iCal': 'iCal 내보내기',
+            'Importer': '가져오기',
+
         },
         ja: {
             'Kanban & Productivité Custom': 'カンバン＆生産性',
@@ -1935,6 +1967,10 @@
             "Données locales invalides": "無効なローカルデータ",
             "Données importées avec succès": "データを正常にインポートしました",
             "Données exportées au format JSON": "データをJSONでエクスポートしました",
+            'Exporter CSV': 'CSVをエクスポート',
+            'Exporter iCal': 'iCalをエクスポート',
+            'Importer': 'インポート',
+
         }
 // __LANG_DICTS__
     };
@@ -1980,6 +2016,10 @@
         'Afficher la colonne À Faire': 'Show To Do column',
         'Afficher la colonne En cours': 'Show In Progress column',
         'Afficher la colonne Terminé': 'Show Done column',
+        'Exporter CSV': 'Export CSV',
+        'Exporter iCal': 'Export iCal',
+            'Importer': 'Import',
+
         'Dev': 'Dev',
         'Design': 'Design'
     };
@@ -1989,6 +2029,7 @@
         fr: frenchText,
         ...extraDictionaries
     };
+    dictionaries['en-GB'] = { ...enText, ...enAdditions, ...(extraDictionaries['en-GB'] || {}) };
 
     const enToFr = frenchText;
     const sourceStrings = [...new Set([...Object.keys(enText), ...Object.keys(enAdditions), ...Object.keys(frenchText)])];

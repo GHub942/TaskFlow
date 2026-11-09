@@ -80,14 +80,17 @@ function createWorker() {
     };
 }
 
-test('installs an app shell and best-effort caches third-party assets', async () => {
+test('installs an app shell including self-hosted vendor assets', async () => {
     const worker = createWorker();
     await worker.dispatch('install', {});
-    assert.ok(worker.cacheStore.get('taskflow-shell-v2').has('https://taskflow.test/index.html'));
-    assert.ok(worker.cacheStore.get('taskflow-shell-v2').has('https://taskflow.test/taskflow-core.js'));
-    assert.ok(worker.cacheStore.get('taskflow-shell-v2').has('https://taskflow.test/i18n.js'));
-    assert.ok(worker.cacheStore.get('taskflow-shell-v2').has('https://taskflow.test/app.js'));
-    assert.ok(worker.cacheStore.get('taskflow-cdn-v1').has('https://cdn.tailwindcss.com/'));
+    const shell = worker.cacheStore.get('taskflow-shell-v3');
+    assert.ok(shell.has('https://taskflow.test/index.html'));
+    assert.ok(shell.has('https://taskflow.test/taskflow-core.js'));
+    assert.ok(shell.has('https://taskflow.test/i18n.js'));
+    assert.ok(shell.has('https://taskflow.test/app.js'));
+    assert.ok(shell.has('https://taskflow.test/vendor/tailwindcss.js'));
+    assert.ok(shell.has('https://taskflow.test/vendor/fontawesome/all.min.css'));
+    assert.ok(shell.has('https://taskflow.test/vendor/fonts/inter.css'));
 });
 
 test('serves the cached app shell for offline navigation', async () => {

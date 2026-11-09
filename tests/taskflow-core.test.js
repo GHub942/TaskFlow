@@ -128,6 +128,40 @@ test('builds iCalendar output with one event per dated task', () => {
     assert.ok(ics.trimEnd().endsWith('END:VCALENDAR'));
 });
 
+test('parses CSV exports back into tasks with headers, quotes, and defaults', () => {
+    const csv = core.buildCsv([
+        sampleTask({ id: 'csv-1', title: 'Say "hi", ok', tags: ['a', 'b'], dueDate: '2026-11-10' }),
+        sampleTask({ id: 'csv-2', title: 'Second', status: 'done', priority: 'high' })
+    ]);
+    const parsed = core.parseCsvTasks(csv);
+    assert.equal(parsed.length, 2);
+    assert.equal(parsed[0].id, 'csv-1');
+    assert.equal(parsed[0].title, 'Say "hi", ok');
+    assert.equal(parsed[0].dueDate, '2026-11-10');
+    assert.deepEqual(parsed[0].tags.sort(), ['a', 'b']);
+    assert.equal(parsed[1].status, 'done');
+    assert.equal(parsed[1].priority, 'high');
+    const normalized = core.normalizeImportedTasks(parsed, ['Work']);
+    assert.equal(normalized.length, 2);
+    assert.equal(core.parseCsvTasks('title\n'), null);
+});
+
+test('parses iCalendar VEVENTs and round-trips TaskFlow exports', () => {
+    const ics = core.buildIcs([
+        sampleTask({ id: 'ics-1', title: 'Meeting, with team', dueDate: '2026-11-10', description: 'Bring notes', category: 'Work', priority: 'high' }),
+        sampleTask({ id: 'ics-2', title: 'No date', dueDate: '' })
+    ]);
+    const parsed = core.parseIcsTasks(ics);
+    assert.equal(parsed.length, 1);
+    assert.equal(parsed[0].id, 'ics-1');
+    assert.equal(parsed[0].title, 'Meeting, with team');
+    assert.equal(parsed[0].dueDate, '2026-11-10');
+    assert.equal(parsed[0].description, 'Bring notes');
+    assert.equal(parsed[0].category, 'Work');
+    assert.equal(parsed[0].priority, 'high');
+    assert.equal(core.parseIcsTasks('not a calendar'), null);
+});
+
 test('stores tasks independently from preferences', () => {
     const state = { tasks: ['task'], categories: ['Work'], pomodoroSessions: ['session'], settings: { theme: 'dark' } };
     const noTaskData = core.buildStorageEntries({ saveData: false, savePreferences: true }, state, { running: false });

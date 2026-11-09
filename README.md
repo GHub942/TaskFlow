@@ -14,7 +14,8 @@ The interface supports 12 languages: English (US and UK), French (France), Spani
 - Productivity statistics: completion by category, tracked time per task, 14-day session chart, and streak
 - Search across task titles, descriptions, categories, tags, and statuses
 - Versioned JSON backup and restore with import preview and replace/merge options
-- CSV and iCalendar exports for tasks and due dates
+- CSV and iCalendar exports for tasks and due dates; the same formats can be imported back
+- Default categories use English names (`Work`, `Dev`, `Design`, `Personal`)
 - A "Delete all data" action that clears tasks, settings, and history
 - Keyboard navigation, responsive accessible controls, and testable notification/sound alerts
 - Offline app-shell caching when hosted on localhost or HTTPS
@@ -31,11 +32,11 @@ The interface supports 12 languages: English (US and UK), French (France), Spani
 - Settings include explicit test actions for browser notifications and sound
 - The Pomodoro widget supports work/break modes, duration controls, one dynamic Start/Pause/Resume button, and dragging on desktop
 
-JSON backups can replace current data or merge into it. The preview summarizes new tasks and ID conflicts before applying changes; during a merge, existing local tasks take precedence. Older task-array backups remain supported. CSV exports a flat task list and iCalendar exports tasks with due dates as events.
+JSON backups can replace current data or merge into it. The preview summarizes new tasks and ID conflicts before applying changes; during a merge, existing local tasks take precedence. Older task-array backups remain supported. CSV exports a flat task list and iCalendar exports tasks with due dates as events; both formats can also be imported — CSV maps title, status, priority, category, due date, duration, and tags columns, while iCalendar imports VEVENT summaries, descriptions, dates, categories, and priorities.
 
 ## Run
 
-Open `index.html` in a modern browser. No build step or package manager is required. The page loads Tailwind CSS, Font Awesome, and the Inter font from third-party CDNs, so the first visit requires an internet connection. For offline app-shell caching, serve the static files from localhost or HTTPS; browsers do not allow service workers for `file://` pages. Task data always stays local to the browser.
+Open `index.html` in a modern browser. No build step or package manager is required. All assets (Tailwind CSS, Font Awesome, and the Inter font) are self-hosted under `vendor/`, so the app works fully offline even on the first visit. For offline app-shell caching, serve the static files from localhost or HTTPS; browsers do not allow service workers for `file://` pages. Task data always stays local to the browser.
 
 ## Data and privacy
 

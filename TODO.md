@@ -16,7 +16,7 @@
 - [x] Configure Pomodoro work/break lengths and persist the running timer across reloads.
 - [x] Add category creation, rename, and deletion controls.
 - [x] Preview import counts and ID conflicts before applying backups.
-- [x] Cache the app shell and runtime CDN assets for offline use on localhost/HTTPS.
+- [x] Cache the app shell and self-hosted vendor assets for offline use on localhost/HTTPS.
 - [x] Improve checkbox/select styling and add notification/sound test actions.
 - [x] Keep tooltip text inside the viewport on narrow screens and at screen edges.
 - [x] Reorganize settings into clear General, Pomodoro, and Data sections.
@@ -31,3 +31,7 @@
 - [x] Add a delete-all-data action covering tasks and preferences.
 - [x] Add swipe navigation between board columns on mobile.
 - [x] Expand the interface to 12 languages and extract app/i18n modules.
+- [x] Import CSV and iCalendar files alongside JSON backups.
+- [x] Use English default category names and close dialogs when clicking the backdrop.
+- [x] Fix static-text translation across language switches without reload.
+- [x] Lock mobile page scroll so only board columns scroll.

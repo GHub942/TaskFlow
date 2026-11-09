@@ -45,20 +45,50 @@
             return map;
         }
 
+        const i18nNodeSources = new WeakMap();
+        const i18nAttrSources = new WeakMap();
+
         function translateStaticUI() {
             const replacements = i18nReplacements();
             const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
             let node;
             while ((node = walker.nextNode())) {
-                const value = node.nodeValue.trim();
+                let entry = i18nNodeSources.get(node);
+                if (!entry) {
+                    entry = { src: node.nodeValue, rendered: node.nodeValue };
+                    i18nNodeSources.set(node, entry);
+                } else if (node.nodeValue !== entry.rendered) {
+                    entry.src = node.nodeValue;
+                    entry.rendered = node.nodeValue;
+                }
+                const value = entry.src.trim();
                 if (!value || !replacements[value]) continue;
-                const start = node.nodeValue.indexOf(value);
-                node.nodeValue = node.nodeValue.slice(0, start) + replacements[value] + node.nodeValue.slice(start + value.length);
+                const start = entry.src.indexOf(value);
+                const next = entry.src.slice(0, start) + replacements[value] + entry.src.slice(start + value.length);
+                node.nodeValue = next;
+                entry.rendered = next;
             }
             document.querySelectorAll('[placeholder], [data-tooltip], [aria-label]').forEach(element => {
+                let stored = i18nAttrSources.get(element);
+                if (!stored) {
+                    stored = {};
+                    i18nAttrSources.set(element, stored);
+                }
                 ['placeholder', 'data-tooltip', 'aria-label'].forEach(attribute => {
-                    const value = element.getAttribute(attribute);
-                    if (value && replacements[value]) element.setAttribute(attribute, replacements[value]);
+                    const current = element.getAttribute(attribute);
+                    if (current == null) return;
+                    let record = stored[attribute];
+                    if (!record) {
+                        record = { src: current, rendered: current };
+                        stored[attribute] = record;
+                    } else if (current !== record.rendered) {
+                        record.src = current;
+                        record.rendered = current;
+                    }
+                    if (replacements[record.src]) {
+                        element.setAttribute(attribute, replacements[record.src]);
+                        record.rendered = replacements[record.src];
+                    }
                 });
             });
             document.documentElement.lang = TaskFlowI18n.htmlLang(activeLanguage);
@@ -70,8 +100,8 @@
         if (!Array.isArray(tasks)) tasks = [
             {
                 id: '1',
-                title: 'Concevoir la maquette Kanban',
-                description: 'Créer le design system responsive et les effets glassmorphism.',
+                title: 'Design the Kanban mockup',
+                description: 'Build the responsive design system and glassmorphism effects.',
                 status: 'done',
                 priority: 'high',
                 category: 'Design',
@@ -80,14 +110,14 @@
                 duration: 60,
                 recurrence: 'none',
                 subtasks: [
-                    { id: 's1', title: 'Choisir la palette de couleurs', completed: true },
-                    { id: 's2', title: 'Créer les composants custom', completed: true }
+                    { id: 's1', title: 'Choose the color palette', completed: true },
+                    { id: 's2', title: 'Build the custom components', completed: true }
                 ]
             },
             {
                 id: '2',
-                title: 'Implémenter le Pomodoro',
-                description: 'Associer les minuteurs aux tâches Kanban pour mesurer le temps.',
+                title: 'Implement the Pomodoro timer',
+                description: 'Wire timers to Kanban tasks to track time.',
                 status: 'in_progress',
                 priority: 'medium',
                 category: 'Dev',
@@ -96,16 +126,16 @@
                 duration: 45,
                 recurrence: 'daily',
                 subtasks: [
-                    { id: 's3', title: 'Logique du compte à rebours', completed: true },
-                    { id: 's4', title: 'Alerte sonore de fin', completed: false }
+                    { id: 's3', title: 'Countdown logic', completed: true },
+                    { id: 's4', title: 'End-of-session sound alert', completed: false }
                 ]
             }
         ];
 
         let categories = storageOptions.saveData ? readStoredJSON('taskmaster_categories', null) : null;
-        if (!Array.isArray(categories) || !categories.every(category => typeof category === 'string')) categories = ['Travail', 'Dev', 'Design', 'Personnel'];
+        if (!Array.isArray(categories) || !categories.every(category => typeof category === 'string')) categories = ['Work', 'Dev', 'Design', 'Personal'];
         categories = [...new Set(categories.filter(category => category.trim() && category.length <= 60))];
-        if (!categories.length) categories = ['Travail', 'Dev', 'Design', 'Personnel'];
+        if (!categories.length) categories = ['Work', 'Dev', 'Design', 'Personal'];
         let pomodoroSessions = storageOptions.saveData ? readStoredJSON('taskmaster_sessions', []) : [];
         if (!Array.isArray(pomodoroSessions)) pomodoroSessions = [];
         let storedTasksInvalid = false;
@@ -118,6 +148,43 @@
             }
         }
         pomodoroSessions = normalizeSessionHistory(pomodoroSessions);
+        const legacyCategoryRename = { travail: 'Work', personnel: 'Personal' };
+        const legacyDefaults = ['travail', 'dev', 'design', 'personnel'];
+        if (categories.length === legacyDefaults.length && legacyDefaults.every(name => categories.some(category => category.toLocaleLowerCase() === name))) {
+            categories = categories.map(category => legacyCategoryRename[category.toLocaleLowerCase()] || category);
+            tasks.forEach(task => {
+                const renamed = legacyCategoryRename[String(task.category || '').toLocaleLowerCase()];
+                if (renamed) task.category = renamed;
+            });
+            saveToLocalStorage();
+        }
+        const seedTaskRename = {
+            'Concevoir la maquette Kanban': { title: 'Design the Kanban mockup', description: 'Build the responsive design system and glassmorphism effects.' },
+            'Implémenter le Pomodoro': { title: 'Implement the Pomodoro timer', description: 'Wire timers to Kanban tasks to track time.' }
+        };
+        const seedSubtaskRename = {
+            'Choisir la palette de couleurs': 'Choose the color palette',
+            'Créer les composants custom': 'Build the custom components',
+            'Logique du compte à rebours': 'Countdown logic',
+            'Alerte sonore de fin': 'End-of-session sound alert'
+        };
+        let seedsMigrated = false;
+        tasks.forEach(task => {
+            const seed = seedTaskRename[task.title];
+            if (seed) {
+                task.title = seed.title;
+                task.description = seed.description;
+                seedsMigrated = true;
+            }
+            (task.subtasks || []).forEach(subtask => {
+                const renamed = seedSubtaskRename[subtask.title];
+                if (renamed) {
+                    subtask.title = renamed;
+                    seedsMigrated = true;
+                }
+            });
+        });
+        if (seedsMigrated) saveToLocalStorage();
         let activeFilters = { category: 'all', priority: 'all', sortBy: 'default', due: 'all', tag: 'all' };
         let draggedTaskId = null;
         let tempSubtasks = [];
@@ -261,6 +328,26 @@
             });
         };
 
+        function tooltipContainingBlock(element) {
+            let node = element.parentElement;
+            while (node && node !== document.documentElement) {
+                const style = getComputedStyle(node);
+                if ((style.backdropFilter && style.backdropFilter !== 'none')
+                    || (style.filter && style.filter !== 'none')
+                    || (style.transform && style.transform !== 'none')
+                    || (style.perspective && style.perspective !== 'none')
+                    || (style.translate && style.translate !== 'none')
+                    || (style.rotate && style.rotate !== 'none')
+                    || (style.scale && style.scale !== 'none')
+                    || (style.contain && style.contain !== 'none' && style.contain.includes('paint'))
+                    || (style.willChange && style.willChange !== 'auto' && /transform|filter|perspective|contain/.test(style.willChange))) {
+                    return node;
+                }
+                node = node.parentElement;
+            }
+            return null;
+        }
+
         function positionTooltip(element) {
             element.setAttribute('data-tooltip-placement', 'top');
             const tooltip = getComputedStyle(element, '::after');
@@ -269,9 +356,19 @@
             const trigger = element.getBoundingClientRect();
             const left = Math.max(width / 2 + 8, Math.min(window.innerWidth - width / 2 - 8, trigger.left + trigger.width / 2));
             const placeBelow = trigger.top < height + 16 && trigger.bottom + height + 16 <= window.innerHeight;
+            const top = placeBelow ? trigger.bottom + 8 : Math.max(height + 8, trigger.top - 8);
+            const container = tooltipContainingBlock(element);
+            let offsetX = 0;
+            let offsetY = 0;
+            if (container) {
+                const containerRect = container.getBoundingClientRect();
+                const containerStyle = getComputedStyle(container);
+                offsetX = containerRect.left + (parseFloat(containerStyle.borderLeftWidth) || 0);
+                offsetY = containerRect.top + (parseFloat(containerStyle.borderTopWidth) || 0);
+            }
             element.dataset.tooltipPlacement = placeBelow ? 'bottom' : 'top';
-            element.style.setProperty('--tooltip-left', `${left}px`);
-            element.style.setProperty('--tooltip-top', `${placeBelow ? trigger.bottom + 8 : Math.max(height + 8, trigger.top - 8)}px`);
+            element.style.setProperty('--tooltip-left', `${left - offsetX}px`);
+            element.style.setProperty('--tooltip-top', `${top - offsetY}px`);
         }
 
         /* Local Storage Helper */
@@ -454,6 +551,7 @@
             renderCustomFilterSelects();
             renderCustomModalSelects();
             renderDueFilterButtons();
+            updatePomodoroDisplay();
             renderTasks();
             saveToLocalStorage();
         }
@@ -748,6 +846,8 @@
             ], activeFilters.priority, 'onPriorityFilterChange');
 
             const allTags = [...new Set(tasks.flatMap(task => task.tags || []))].sort((a, b) => a.localeCompare(b, TaskFlowI18n.localeFor(activeLanguage)));
+            const tagFilterContainer = document.getElementById('filter-tag-select');
+            if (tagFilterContainer) tagFilterContainer.classList.toggle('hidden', allTags.length === 0 && activeFilters.tag === 'all');
             createCustomSelect('filter-tag-select', [
                 { value: 'all', label: tr('Tous les tags'), icon: 'fa-solid fa-tags' },
                 ...allTags.map(tag => ({ value: tag, label: `#${tag}`, icon: 'fa-solid fa-tag' }))
@@ -766,7 +866,7 @@
                 const selected = button.dataset.dueFilter === activeFilters.due;
                 button.textContent = tr(labels[button.dataset.dueFilter]);
                 button.setAttribute('aria-pressed', String(selected));
-                button.className = `due-filter-btn px-3 py-1.5 rounded-lg text-xs font-medium ${selected ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}`;
+                button.className = `due-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 ${selected ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}`;
             });
         }
 
@@ -791,7 +891,7 @@
         }
 
         /* Modal Custom Selects Configuration */
-        let modalFormValues = { status: 'todo', priority: 'medium', category: 'Travail', recurrence: 'none', tags: [] };
+        let modalFormValues = { status: 'todo', priority: 'medium', category: 'Work', recurrence: 'none', tags: [] };
 
         function renderCustomModalSelects() {
             createCustomSelect('modal-status-select', [
@@ -1596,18 +1696,9 @@
 
         /* Theme Toggle Handler */
         function toggleTheme() {
-            const html = document.documentElement;
-            const icon = document.getElementById('theme-icon');
-
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                icon.className = 'fa-solid fa-sun text-amber-500';
-                localStorage.setItem('theme', 'light');
-            } else {
-                html.classList.add('dark');
-                icon.className = 'fa-solid fa-moon text-slate-300';
-                localStorage.setItem('theme', 'dark');
-            }
+            const effectiveDark = settings.theme === 'dark'
+                || (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            updateSetting('theme', effectiveDark ? 'light' : 'dark');
         }
 
         /* Export & Import JSON Operations */
@@ -1671,7 +1762,25 @@
             const fileReader = new FileReader();
             fileReader.onload = function(loadEvent) {
                 try {
-                    const payload = validateImportPayload(JSON.parse(loadEvent.target.result));
+                    const text = String(loadEvent.target.result || '');
+                    const name = (file.name || '').toLowerCase();
+                    let payload = null;
+                    const tabularPayload = parsedTasks => {
+                        const normalized = parsedTasks && normalizeImportedTasks(parsedTasks);
+                        if (!normalized) return null;
+                        return { tasks: normalized, categories: [...new Set(normalized.map(task => task.category))], settings: null, pomodoroSessions: null };
+                    };
+                    if (name.endsWith('.csv')) {
+                        payload = tabularPayload(TaskFlowCore.parseCsvTasks(text));
+                    } else if (name.endsWith('.ics') || name.endsWith('.ical')) {
+                        payload = tabularPayload(TaskFlowCore.parseIcsTasks(text));
+                    } else {
+                        try {
+                            payload = validateImportPayload(JSON.parse(text));
+                        } catch (jsonError) {
+                            payload = tabularPayload(TaskFlowCore.parseIcsTasks(text)) || tabularPayload(TaskFlowCore.parseCsvTasks(text));
+                        }
+                    }
                     if (!payload) throw new Error('invalid backup');
                     pendingImport = payload;
                     const preview = TaskFlowCore.buildImportPreview(tasks, payload.tasks);

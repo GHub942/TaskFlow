@@ -125,7 +125,7 @@
         const sessions = rawSessions === null ? null : normalizeSessionHistory(rawSessions);
         if (rawSessions !== null && sessions.length !== rawSessions.length) return null;
         const normalizedCategories = [...new Set(importedCategories)];
-        if (!normalizedCategories.length) normalizedCategories.push(...(categories.length ? categories : ['Travail', 'Dev', 'Design', 'Personnel']));
+        if (!normalizedCategories.length) normalizedCategories.push(...(categories.length ? categories : ['Work', 'Dev', 'Design', 'Personal']));
         return { tasks: importedTasks, categories: normalizedCategories, settings: importedSettings, pomodoroSessions: sessions };
     }
 
@@ -277,9 +277,11 @@
             `DTSTAMP:${stamp}`,
             `DTSTART;VALUE=DATE:${icsDate(task.dueDate)}`,
             `SUMMARY:${escapeIcsText(task.title)}`,
-            `DESCRIPTION:${escapeIcsText([task.description, task.category, task.priority, (task.tags || []).join(', ')].filter(Boolean).join(' — '))}`,
+            `DESCRIPTION:${escapeIcsText(task.description)}`,
+            task.category ? `CATEGORIES:${escapeIcsText(task.category)}` : null,
+            task.priority ? `X-PRIORITY:${escapeIcsText(task.priority)}` : null,
             'END:VEVENT'
-        ].join('\r\n'));
+        ].filter(Boolean).join('\r\n'));
         return [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
@@ -290,6 +292,165 @@
             'END:VCALENDAR',
             ''
         ].join('\r\n');
+    }
+
+    function parseCsvRows(text) {
+        const rows = [];
+        let row = [];
+        let cell = '';
+        let inQuotes = false;
+        const source = String(text || '').replace(/^\uFEFF/, '');
+        for (let i = 0; i < source.length; i += 1) {
+            const char = source[i];
+            if (inQuotes) {
+                if (char === '"') {
+                    if (source[i + 1] === '"') { cell += '"'; i += 1; }
+                    else inQuotes = false;
+                } else cell += char;
+            } else if (char === '"') inQuotes = true;
+            else if (char === ',') { row.push(cell); cell = ''; }
+            else if (char === '\n' || char === '\r') {
+                if (char === '\r' && source[i + 1] === '\n') i += 1;
+                row.push(cell);
+                cell = '';
+                if (row.some(value => value.trim() !== '')) rows.push(row);
+                row = [];
+            } else cell += char;
+        }
+        if (cell !== '' || row.length) {
+            row.push(cell);
+            if (row.some(value => value.trim() !== '')) rows.push(row);
+        }
+        return rows;
+    }
+
+    function normalizeImportedCategory(value) {
+        const category = String(value || '').trim();
+        return category && category.length <= 60 ? category : null;
+    }
+
+    function parseCsvTasks(text) {
+        const rows = parseCsvRows(text);
+        if (rows.length < 2) return null;
+        const header = rows[0].map(cell => cell.trim().toLowerCase());
+        const column = name => header.indexOf(name);
+        const idx = {
+            id: column('id'),
+            title: column('title') >= 0 ? column('title') : column('name'),
+            status: column('status') >= 0 ? column('status') : column('state'),
+            priority: column('priority'),
+            category: column('category') >= 0 ? column('category') : column('categorie'),
+            dueDate: column('duedate') >= 0 ? column('duedate') : (column('due') >= 0 ? column('due') : column('due_date')),
+            duration: column('duration'),
+            tags: column('tags') >= 0 ? column('tags') : column('tag'),
+            description: column('description') >= 0 ? column('description') : column('desc')
+        };
+        if (idx.title < 0) return null;
+        const statusMap = { todo: 'todo', 'to do': 'todo', 'à faire': 'todo', backlog: 'todo', 'in progress': 'in_progress', 'en cours': 'in_progress', doing: 'in_progress', in_progress: 'in_progress', done: 'done', completed: 'done', 'terminé': 'done' };
+        const priorityMap = { low: 'low', basse: 'low', medium: 'medium', moyenne: 'medium', med: 'medium', high: 'high', haute: 'high', urgent: 'high' };
+        const stamp = Date.now();
+        const tasks = [];
+        for (const [rowIndex, row] of rows.slice(1).entries()) {
+            const title = String(row[idx.title] || '').trim();
+            if (!title || title.length > 500) continue;
+            const statusRaw = String(row[idx.status] || '').trim().toLowerCase();
+            const priorityRaw = String(row[idx.priority] || '').trim().toLowerCase();
+            const dueRaw = String(idx.dueDate >= 0 ? row[idx.dueDate] || '' : '').trim();
+            const dueDate = /^\d{4}-\d{2}-\d{2}/.test(dueRaw) ? dueRaw.slice(0, 10) : (/^\d{1,2}[/.]\d{1,2}[/.]\d{4}/.test(dueRaw) ? (() => { const [d, m, y] = dueRaw.split(/[/.]/); return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`; })() : '');
+            const tags = idx.tags >= 0
+                ? String(row[idx.tags] || '').split(/[;,]/).map(tag => tag.trim()).filter(tag => tag && tag.length <= 30).slice(0, 10)
+                : [];
+            tasks.push({
+                id: /^[\w-]{1,100}$/.test(String(row[idx.id] || '').trim()) ? String(row[idx.id]).trim() : `task_csv_${stamp}_${rowIndex}`,
+                title,
+                description: idx.description >= 0 ? String(row[idx.description] || '').slice(0, 10000) : '',
+                status: statusMap[statusRaw] || 'todo',
+                priority: priorityMap[priorityRaw] || 'medium',
+                category: normalizeImportedCategory(idx.category >= 0 ? row[idx.category] : '') || 'General',
+                dueDate,
+                duration: idx.duration >= 0 && Number.isFinite(Number(row[idx.duration])) ? Number(row[idx.duration]) : 30,
+                recurrence: 'none',
+                tags: [...new Set(tags.map(tag => tag))].slice(0, 10),
+                subtasks: []
+            });
+            if (tasks.length > 10000) return null;
+        }
+        return tasks.length ? tasks : null;
+    }
+
+    function unfoldIcsLines(text) {
+        const lines = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+        const unfolded = [];
+        for (const line of lines) {
+            if ((line.startsWith(' ') || line.startsWith('\t')) && unfolded.length) unfolded[unfolded.length - 1] += line.slice(1);
+            else unfolded.push(line);
+        }
+        return unfolded;
+    }
+
+    function unescapeIcsText(value) {
+        return String(value || '')
+            .replace(/\\n/gi, '\n')
+            .replace(/\\,/g, ',')
+            .replace(/\\;/g, ';')
+            .replace(/\\\\/g, '\\');
+    }
+
+    function icsProperty(line, name) {
+        const match = line.match(new RegExp(`^${name}(;[^:]*)?:(.*)$`, 'i'));
+        return match ? { params: match[1] || '', value: match[2] } : null;
+    }
+
+    function parseIcsDate(value, params) {
+        const match = String(value || '').match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})Z?)?$/);
+        if (!match) return '';
+        const date = `${match[1]}-${match[2]}-${match[3]}`;
+        if (/VALUE=DATE/i.test(params) || !match[4]) return /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(new Date(`${date}T00:00:00Z`).getTime()) ? date : '';
+        return date;
+    }
+
+    function parseIcsTasks(text) {
+        const lines = unfoldIcsLines(text);
+        if (!lines.some(line => /^BEGIN:VCALENDAR/i.test(line.trim()))) return null;
+        const events = [];
+        let current = null;
+        for (const rawLine of lines) {
+            const line = rawLine.trim();
+            if (/^BEGIN:VEVENT/i.test(line)) { current = {}; continue; }
+            if (/^END:VEVENT/i.test(line)) { if (current) events.push(current); current = null; continue; }
+            if (!current) continue;
+            for (const name of ['UID', 'SUMMARY', 'DESCRIPTION', 'DTSTART', 'CATEGORIES', 'X-PRIORITY']) {
+                const prop = icsProperty(line, name);
+                if (prop && current[name] == null) current[name] = prop;
+            }
+        }
+        if (!events.length) return null;
+        const stamp = Date.now();
+        const tasks = [];
+        for (const [index, event] of events.entries()) {
+            const title = unescapeIcsText(event.SUMMARY && event.SUMMARY.value).trim();
+            if (!title || title.length > 500) continue;
+            const uid = String(event.UID && event.UID.value || '').trim();
+            const idMatch = uid.match(/^([\w-]{1,100})@/);
+            const dueDate = event.DTSTART ? parseIcsDate(event.DTSTART.value, event.DTSTART.params) : '';
+            const priorityRaw = String(event['X-PRIORITY'] && event['X-PRIORITY'].value || '').trim().toLowerCase();
+            const category = normalizeImportedCategory(unescapeIcsText(event.CATEGORIES && event.CATEGORIES.value)) || 'General';
+            tasks.push({
+                id: idMatch ? idMatch[1] : `task_ics_${stamp}_${index}`,
+                title,
+                description: unescapeIcsText(event.DESCRIPTION && event.DESCRIPTION.value).slice(0, 10000),
+                status: 'todo',
+                priority: ['low', 'medium', 'high'].includes(priorityRaw) ? priorityRaw : 'medium',
+                category,
+                dueDate,
+                duration: 30,
+                recurrence: 'none',
+                tags: [],
+                subtasks: []
+            });
+            if (tasks.length > 10000) return null;
+        }
+        return tasks.length ? tasks : null;
     }
 
     function buildStorageEntries(policy, state, timer) {
@@ -309,6 +470,8 @@
     return {
         buildCsv,
         buildIcs,
+        parseCsvTasks,
+        parseIcsTasks,
         buildStorageEntries,
         buildImportPreview,
         computeProductivityStats,
