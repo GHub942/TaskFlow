@@ -62,6 +62,72 @@ test('matches overdue and upcoming tasks using inclusive local-date strings', ()
     assert.equal(core.matchesDueFilter('2026-11-06', 'done', 'overdue', '2026-11-07'), false);
 });
 
+test('normalizes task tags with trimming, deduplication, and limits', () => {
+    const payload = core.normalizeImportedTasks([sampleTask({ tags: ['  Urgent ', 'urgent', 'Backend'] })]);
+    assert.deepEqual(payload[0].tags, ['Urgent', 'Backend']);
+    assert.deepEqual(core.normalizeImportedTasks([sampleTask()])[0].tags, []);
+    assert.equal(core.normalizeImportedTasks([sampleTask({ tags: 'not-array' })]), null);
+    assert.equal(core.normalizeImportedTasks([sampleTask({ tags: Array(11).fill('x') })]), null);
+    assert.equal(core.normalizeImportedTasks([sampleTask({ tags: ['x'.repeat(31)] })]), null);
+});
+
+test('matches tasks due today using the today filter', () => {
+    assert.equal(core.matchesDueFilter('2026-11-07', 'todo', 'today', '2026-11-07'), true);
+    assert.equal(core.matchesDueFilter('2026-11-08', 'todo', 'today', '2026-11-07'), false);
+    assert.equal(core.matchesDueFilter('2026-11-07', 'done', 'today', '2026-11-07'), false);
+});
+
+test('accepts all supported interface languages in imported settings', () => {
+    for (const language of ['en', 'en-GB', 'fr', 'es', 'it', 'de', 'ru', 'uk', 'zh', 'ko', 'ja']) {
+        const payload = core.validateImportPayload({ version: 2, tasks: [sampleTask()], settings: { language } });
+        assert.equal(payload.settings.language, language);
+    }
+    assert.equal(core.validateImportPayload({ version: 2, tasks: [sampleTask()], settings: { language: 'pt' } }), null);
+});
+
+test('computes productivity stats by category, task time, days, and streak', () => {
+    const tasks = [
+        sampleTask({ id: 'a', category: 'Work', status: 'done' }),
+        sampleTask({ id: 'b', category: 'Work', status: 'todo' }),
+        sampleTask({ id: 'c', category: 'Home', status: 'done' })
+    ];
+    const sessions = [
+        { id: 's1', taskId: 'a', durationSeconds: 1500, completedAt: '2026-11-06T10:00:00Z' },
+        { id: 's2', taskId: 'a', durationSeconds: 600, completedAt: '2026-11-07T10:00:00Z' },
+        { id: 's3', taskId: null, durationSeconds: 300, completedAt: '2026-11-07T11:00:00Z' }
+    ];
+    const stats = core.computeProductivityStats(tasks, sessions, '2026-11-07');
+    assert.equal(stats.totals.tasks, 3);
+    assert.equal(stats.totals.done, 2);
+    assert.equal(stats.timeByTask.a, 2100);
+    assert.equal(stats.sessionsByDay.length, 14);
+    assert.equal(stats.sessionsByDay.at(-1).count, 2);
+    assert.equal(stats.sessionsByDay.at(-2).count, 1);
+    assert.equal(stats.streakDays, 2);
+    const work = stats.completionByCategory.find(entry => entry.category === 'Work');
+    assert.deepEqual({ total: work.total, done: work.done, rate: work.rate }, { total: 2, done: 1, rate: 50 });
+});
+
+test('builds escaped CSV output with a UTF-8 BOM', () => {
+    const csv = core.buildCsv([sampleTask({ title: 'Say "hi", ok', tags: ['a', 'b'], subtasks: [{ id: 's', title: 'x', completed: false }] })]);
+    assert.ok(csv.startsWith('﻿id,title'));
+    assert.ok(csv.includes('"Say ""hi"", ok"'));
+    assert.ok(csv.includes('a;b'));
+});
+
+test('builds iCalendar output with one event per dated task', () => {
+    const ics = core.buildIcs([
+        sampleTask({ id: 'task-1', title: 'Meeting, with team', dueDate: '2026-11-10', description: 'Line1\nLine2' }),
+        sampleTask({ id: 'task-2', title: 'No date', dueDate: '' })
+    ]);
+    assert.ok(ics.startsWith('BEGIN:VCALENDAR'));
+    assert.ok(ics.includes('DTSTART;VALUE=DATE:20261110'));
+    assert.ok(ics.includes('SUMMARY:Meeting\\, with team'));
+    assert.ok(ics.includes('UID:task-1@taskflow'));
+    assert.ok(!ics.includes('No date'));
+    assert.ok(ics.trimEnd().endsWith('END:VCALENDAR'));
+});
+
 test('stores tasks independently from preferences', () => {
     const state = { tasks: ['task'], categories: ['Work'], pomodoroSessions: ['session'], settings: { theme: 'dark' } };
     const noTaskData = core.buildStorageEntries({ saveData: false, savePreferences: true }, state, { running: false });

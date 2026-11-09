@@ -1,6 +1,6 @@
-const SHELL_CACHE = 'taskflow-shell-v1';
+const SHELL_CACHE = 'taskflow-shell-v2';
 const CDN_CACHE = 'taskflow-cdn-v1';
-const APP_SHELL = ['./', './index.html', './taskflow-core.js'];
+const APP_SHELL = ['./', './index.html', './taskflow-core.js', './i18n.js', './app.js'];
 const CDN_RESOURCES = [
     'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',

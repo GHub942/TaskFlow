@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add task tags with card chips, search, and a dedicated filter.
+- Add a "due today" filter, task duplication, and undo for task deletion.
+- Add enriched productivity statistics: completion by category, tracked time per task, 14-day session chart, and streak.
+- Add CSV and iCalendar exports alongside JSON backups.
+- Add a "Delete all data" action in Settings > Data that clears tasks and preferences.
+- Add swipe navigation between board columns on mobile with page indicators.
+- Expand the interface to 12 languages: English (US/UK), French, Spanish, Italian, German, Russian, Ukrainian, Chinese, Korean, and Japanese.
+- Extract the inline application script into `app.js` and move translations into `i18n.js`.
 - Reorganize settings into tabs with independent task-data and preference retention controls.
 - Replace number spinners with custom duration steppers and add Start/Pause/Resume Pomodoro controls.
 - Make the Pomodoro widget draggable and restore its position when task data is saved.

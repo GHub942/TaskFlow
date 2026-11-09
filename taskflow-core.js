@@ -6,7 +6,7 @@
     const taskStatuses = ['todo', 'in_progress', 'done'];
     const priorities = ['low', 'medium', 'high'];
     const recurrenceOptions = ['none', 'daily', 'weekly', 'monthly'];
-    const settingLanguages = ['system', 'en', 'fr'];
+    const settingLanguages = ['system', 'en', 'en-GB', 'fr', 'es', 'it', 'de', 'ru', 'uk', 'zh', 'ko', 'ja'];
     const settingThemes = ['system', 'light', 'dark', 'taskmaster'];
 
     function normalizeImportedTasks(value, categories = []) {
@@ -24,6 +24,20 @@
             const dueDate = task.dueDate == null ? '' : String(task.dueDate);
             if (dueDate && (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || Number.isNaN(new Date(`${dueDate}T00:00:00Z`).getTime()) || new Date(`${dueDate}T00:00:00Z`).toISOString().slice(0, 10) !== dueDate)) return null;
             if (task.description != null && (typeof task.description !== 'string' || task.description.length > 10000)) return null;
+            const rawTags = task.tags == null ? [] : task.tags;
+            if (!Array.isArray(rawTags) || rawTags.length > 10) return null;
+            const tags = [];
+            const tagKeys = new Set();
+            for (const rawTag of rawTags) {
+                if (typeof rawTag !== 'string') return null;
+                const tag = rawTag.trim();
+                if (!tag || tag.length > 30) return null;
+                const tagKey = tag.toLocaleLowerCase();
+                if (!tagKeys.has(tagKey)) {
+                    tagKeys.add(tagKey);
+                    tags.push(tag);
+                }
+            }
             if (task.category != null && (typeof task.category !== 'string' || !task.category.trim() || task.category.length > 60)) return null;
             if (task.duration != null && (!Number.isFinite(Number(task.duration)) || Number(task.duration) < 0 || Number(task.duration) > 100000)) return null;
             const subtasks = task.subtasks == null ? [] : task.subtasks;
@@ -51,6 +65,7 @@
                 dueDate,
                 duration: Number(task.duration) || 30,
                 recurrence: task.recurrence || 'none',
+                tags,
                 subtasks: normalizedSubtasks
             });
         }
@@ -156,12 +171,125 @@
         if (filter === 'all') return true;
         if (status === 'done' || !dueDate) return false;
         if (filter === 'overdue') return dueDate < today;
+        if (filter === 'today') return dueDate === today;
         if (filter === 'upcoming') {
             const limit = new Date(`${today}T00:00:00Z`);
             limit.setUTCDate(limit.getUTCDate() + 7);
             return dueDate >= today && dueDate <= limit.toISOString().slice(0, 10);
         }
         return true;
+    }
+
+    function computeProductivityStats(tasks, sessions, today = localDateString()) {
+        const byCategory = new Map();
+        for (const task of tasks) {
+            const category = task.category || 'General';
+            const entry = byCategory.get(category) || { category, total: 0, done: 0 };
+            entry.total += 1;
+            if (task.status === 'done') entry.done += 1;
+            byCategory.set(category, entry);
+        }
+        const completionByCategory = [...byCategory.values()]
+            .map(entry => ({ ...entry, rate: entry.total ? Math.round((entry.done / entry.total) * 100) : 0 }))
+            .sort((a, b) => b.total - a.total || a.category.localeCompare(b.category));
+
+        const timeByTask = new Map();
+        for (const session of sessions) {
+            if (!session.taskId) continue;
+            timeByTask.set(session.taskId, (timeByTask.get(session.taskId) || 0) + session.durationSeconds);
+        }
+
+        const sessionsByDay = [];
+        const dayCounts = new Map();
+        for (const session of sessions) {
+            const day = String(session.completedAt || '').slice(0, 10);
+            if (day) dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
+        }
+        const todayDate = new Date(`${today}T00:00:00Z`);
+        for (let offset = 13; offset >= 0; offset -= 1) {
+            const date = new Date(todayDate);
+            date.setUTCDate(date.getUTCDate() - offset);
+            const key = date.toISOString().slice(0, 10);
+            sessionsByDay.push({ date: key, count: dayCounts.get(key) || 0 });
+        }
+
+        const sessionDays = new Set(sessions.map(session => String(session.completedAt || '').slice(0, 10)).filter(Boolean));
+        let streakDays = 0;
+        const streakCursor = new Date(todayDate);
+        if (!sessionDays.has(localDateString(streakCursor))) streakCursor.setUTCDate(streakCursor.getUTCDate() - 1);
+        while (sessionDays.has(localDateString(streakCursor))) {
+            streakDays += 1;
+            streakCursor.setUTCDate(streakCursor.getUTCDate() - 1);
+        }
+
+        return {
+            completionByCategory,
+            timeByTask: Object.fromEntries(timeByTask),
+            sessionsByDay,
+            streakDays,
+            totals: {
+                tasks: tasks.length,
+                done: tasks.filter(task => task.status === 'done').length,
+                sessions: sessions.length,
+                trackedSeconds: sessions.reduce((total, session) => total + session.durationSeconds, 0)
+            }
+        };
+    }
+
+    function escapeCsvCell(value) {
+        const text = String(value ?? '');
+        return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    }
+
+    function buildCsv(tasks) {
+        const header = ['id', 'title', 'status', 'priority', 'category', 'dueDate', 'duration', 'tags', 'subtasks'];
+        const rows = tasks.map(task => [
+            task.id,
+            task.title,
+            task.status,
+            task.priority,
+            task.category,
+            task.dueDate || '',
+            task.duration ?? '',
+            (task.tags || []).join(';'),
+            (task.subtasks || []).length
+        ].map(escapeCsvCell).join(','));
+        return `\uFEFF${[header.join(','), ...rows].join('\r\n')}`;
+    }
+
+    function escapeIcsText(value) {
+        return String(value ?? '')
+            .replace(/\\/g, '\\\\')
+            .replace(/;/g, '\\;')
+            .replace(/,/g, '\\,')
+            .replace(/\r?\n/g, '\\n');
+    }
+
+    function icsDate(value) {
+        return String(value).replace(/-/g, '');
+    }
+
+    function buildIcs(tasks) {
+        const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+        const events = tasks.filter(task => /^\d{4}-\d{2}-\d{2}$/.test(task.dueDate || '')).map(task => [
+            'BEGIN:VEVENT',
+            `UID:${escapeIcsText(task.id)}@taskflow`,
+            `DTSTAMP:${stamp}`,
+            `DTSTART;VALUE=DATE:${icsDate(task.dueDate)}`,
+            `SUMMARY:${escapeIcsText(task.title)}`,
+            `DESCRIPTION:${escapeIcsText([task.description, task.category, task.priority, (task.tags || []).join(', ')].filter(Boolean).join(' — '))}`,
+            'END:VEVENT'
+        ].join('\r\n'));
+        return [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//TaskFlow//Kanban//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            ...events,
+            'END:VCALENDAR',
+            ''
+        ].join('\r\n');
     }
 
     function buildStorageEntries(policy, state, timer) {
@@ -179,8 +307,11 @@
     }
 
     return {
+        buildCsv,
+        buildIcs,
         buildStorageEntries,
         buildImportPreview,
+        computeProductivityStats,
         localDateString,
         matchesDueFilter,
         mergeTasks,

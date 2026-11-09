@@ -25,3 +25,9 @@
 - [x] Add dynamic Pomodoro Start/Pause/Resume and direct duration adjustment.
 - [x] Allow dragging the Pomodoro widget on desktop.
 - [x] Ensure tooltips hide after pointer/focus leaves, including after clicks.
+- [x] Add task tags with card chips, search, and a dedicated filter.
+- [x] Add a due-today filter, task duplication, and undo for task deletion.
+- [x] Add enriched productivity statistics and CSV/iCalendar exports.
+- [x] Add a delete-all-data action covering tasks and preferences.
+- [x] Add swipe navigation between board columns on mobile.
+- [x] Expand the interface to 12 languages and extract app/i18n modules.
